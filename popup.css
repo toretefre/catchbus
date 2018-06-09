@@ -1,0 +1,10 @@
+html {
+    width:              200px;
+    height:             100px;
+    background-color:   #A8AD00;
+}
+
+.ui-widget {
+    width:              80%;
+    margin:             10%;
+}
