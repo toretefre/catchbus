@@ -1,23 +1,19 @@
-$( document ).ready(function() {
-        $( "a" ).click(function( event ) {
-            alert( "JQuery er installert og vil snart gje deg sanntidsdata!" );
-            event.preventDefault();
-        });
-    });
-
-
 var resultText = document.getElementById("resultText");
-function getLocation() {
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(showPosition);
-    }
-    else {
-        resultText.innerHTML = "Geolocation is not supported by this browser.";
-    }
-}
+
+$( document ).ready(function() {
+    console.log( "JQuery has started!" );
+    navigator.geolocation.getCurrentPosition(function(position) {
+        showLocation(position.coords.latitude, position.coords.longitude);
+    });
+    console.log( "JQuery has polled for location!" )
+});
 
 
-function showPosition(position) {
-    resultText.innerHTML = "Latitude: " + position.coords.latitude +
-        "<br>Longitude: " + position.coords.longitude;
+function showLocation(latitude, longitude) {
+    resultText.innerHTML = "Latitude: " + latitude +
+        "<br>Longitude: " + longitude;
+    console.log( "JQuery has displayed location")
 }
+
+// Not needed because showPosition is triggered on load
+// document.getElementById("geoStationButton").addEventListener("click", showPosition);
