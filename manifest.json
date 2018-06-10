@@ -1,5 +1,5 @@
 {
-  "manifest_version": 2,
+  "manifest_version": 3,
 
   "name": "Catchbus",
   "description": "This extension will show you real time bus station information and enable you to find a trip",
@@ -9,7 +9,9 @@
    "default_icon": "catchbus.png",
    "default_popup": "popup.html"
   },
+
   "permissions": [
-   "activeTab"
+    "activeTab",
+    "geolocation"
    ]
 }
