@@ -12,7 +12,7 @@ $( document ).ready(function() {
 function showLocation(latitude, longitude) {
     resultText.innerHTML = "Latitude: " + latitude +
         "<br>Longitude: " + longitude;
-    console.log( "JQuery has displayed location")
+    console.log( "JQuery has displayed location!" )
 }
 
 // Not needed because showPosition is triggered on load
