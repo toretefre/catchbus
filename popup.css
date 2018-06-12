@@ -8,3 +8,7 @@ div {
     width:              100%;
     margin:             10%;
 }
+
+p, h1, h2, h3 {
+    font-family:        "Comic Sans MS", cursive, sans-serif;
+}

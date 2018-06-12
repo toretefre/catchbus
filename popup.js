@@ -3,17 +3,17 @@ var resultText = document.getElementById("resultText");
 $( document ).ready(function() {
     console.log( "JQuery has started!" );
     navigator.geolocation.getCurrentPosition(function(position) {
-        showLocation(position.coords.latitude, position.coords.longitude, "Samfundet", 69);
+        showLocation(position.coords.latitude, position.coords.longitude, nameOfStation(samfundet), distanceInMetersBetweenUserAndStop(testUser, samfundet));
     });
     console.log( "JQuery has polled for location!" );
 });
 
 
 function showLocation(latitude, longitude, closestStop, distanceToClosestStop) {
-    resultText.innerHTML =  "Latitude: " + latitude +
-                            "<br>Longitude: " + longitude +
-                            "<br>Næraste haldeplass: " + closestStop +
-                            "<br>Distanse: " + distanceToClosestStop + " meter";
+    resultText.innerHTML =  "<span>Latitude: " + latitude.toFixed(6) +
+                            "</span><span><br>Longitude: " + longitude.toFixed(6) +
+                            "</span><span><br>Næraste haldeplass: " + closestStop +
+                            "</span><span><br>Distanse: " + distanceToClosestStop + " meter" + "</span>";
     console.log( "JQuery has displayed location!" )
 }
 
@@ -25,6 +25,10 @@ var samfundet = ["Studentersamfundet", 63.422609, 10.394647];
 
 function degreesToRadians(degrees) {
     return degrees * Math.PI / 180;
+}
+
+function nameOfStation(stop) {
+    return stop[0];
 }
 
 
@@ -46,7 +50,7 @@ function distanceInMetersBetweenUserAndStop(user, stop) {
     var a = Math.sin(dLat/2) * Math.sin(dLat/2) +
             Math.sin(dLon/2) * Math.sin(dLon/2) * Math.cos(userLat) * Math.cos(stopLat);
     var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    return (earthRadiusKm * c) * 1000;
+    return ((earthRadiusKm * c) * 1000).toFixed(1);
 }
 
 // Not currently needed because showPosition is triggered on load
