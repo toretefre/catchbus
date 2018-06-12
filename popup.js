@@ -28,8 +28,14 @@ function degreesToRadians(degrees) {
 }
 
 
-function distanceInMetersBetweenEarthCoordinates(userLat, userLon, stopLat, stopLon) {
+function distanceInMetersBetweenUserAndStop(user, stop) {
     const earthRadiusKm = 6371;
+
+    var userLat = user[1];
+    var userLon = user[2];
+
+    var stopLat = stop[1];
+    var stopLon = stop[2];
 
     var dLat = degreesToRadians(stopLat - userLat);
     var dLon = degreesToRadians(stopLon - userLon);
