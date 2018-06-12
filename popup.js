@@ -3,22 +3,22 @@ var resultText = document.getElementById("resultText");
 $( document ).ready(function() {
     console.log( "JQuery has started!" );
     navigator.geolocation.getCurrentPosition(function(position) {
-        showLocation(position.coords.latitude, position.coords.longitude, nameOfStation(samfundet), distanceInMetersBetweenUserAndStop(testUser, samfundet));
+        var user = ["Din posisjon", position.coords.latitude, position.coords.longitude];
+        showLocation(user, nameOfStop(samfundet), distanceInMetersBetweenUserAndStop(user, samfundet));
     });
     console.log( "JQuery has polled for location!" );
 });
 
 
-function showLocation(latitude, longitude, closestStop, distanceToClosestStop) {
-    resultText.innerHTML =  "<span>Latitude: " + latitude.toFixed(6) +
-                            "</span><span><br>Longitude: " + longitude.toFixed(6) +
+function showLocation(user, closestStop, distanceToClosestStop) {
+    resultText.innerHTML =  "<span>Latitude: " + user[1].toFixed(6) +
+                            "</span><span><br>Longitude: " + user[2].toFixed(6) +
                             "</span><span><br>Næraste haldeplass: " + closestStop +
                             "</span><span><br>Distanse: " + distanceToClosestStop + " meter" + "</span>";
     console.log( "JQuery has displayed location!" )
 }
 
 // [name, lat, lon]
-var testUser = ["Din posisjon", 63.422557, 10.397147];
 var prinsenkino = ["Prinsen Kinosenter", 63.426319, 10.393601];
 var samfundet = ["Studentersamfundet", 63.422609, 10.394647];
 
@@ -27,7 +27,7 @@ function degreesToRadians(degrees) {
     return degrees * Math.PI / 180;
 }
 
-function nameOfStation(stop) {
+function nameOfStop(stop) {
     return stop[0];
 }
 
