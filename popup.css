@@ -1,6 +1,6 @@
 html {
     width:              200px;
-    height:             100px;
+    min-height:         100px;
     background-color:   #A8AD00;
 }
 
