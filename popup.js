@@ -11,10 +11,10 @@ $( document ).ready(function() {
 
 
 function showLocation(user, closestStop, distanceToClosestStop) {
-    resultText.innerHTML =  "<span>Latitude: " + user[1].toFixed(6) +
-                            "</span><span><br>Longitude: " + user[2].toFixed(6) +
-                            "</span><span><br>Næraste haldeplass: " + closestStop +
-                            "</span><span><br>Distanse: " + distanceToClosestStop + " meter" + "</span>";
+    resultText.innerHTML =  "<span>Latitude: " + user[1].toFixed(6) + "</span>" +
+                            "<span><br>Longitude: " + user[2].toFixed(6) + "</span>" +
+                            "<span><br>Næraste haldeplass: " + closestStop + "</span>" +
+                            "<span><br>Distanse: " + distanceToClosestStop + " meter" + "</span>";
     console.log( "JQuery has displayed location!" )
 }
 
