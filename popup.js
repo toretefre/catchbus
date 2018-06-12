@@ -3,13 +3,11 @@ var resultText = document.getElementById("resultText");
 $( document ).ready(function() {
     console.log( "JQuery has started!" );
     navigator.geolocation.getCurrentPosition(function(position) {
-        showLocation(position.coords.latitude, position.coords.longitude, "Samfundet", 500);
+        showLocation(position.coords.latitude, position.coords.longitude, "Samfundet", 69);
     });
     console.log( "JQuery has polled for location!" );
 });
 
-var closestStop = "Studentersamfundet";
-var distanceToClosestStop = "500";
 
 function showLocation(latitude, longitude, closestStop, distanceToClosestStop) {
     resultText.innerHTML =  "Latitude: " + latitude +
@@ -45,5 +43,5 @@ function distanceInMetersBetweenEarthCoordinates(userLat, userLon, stopLat, stop
     return (earthRadiusKm * c) * 1000;
 }
 
-// Not needed because showPosition is triggered on load
+// Not currently needed because showPosition is triggered on load
 // document.getElementById("geoStationButton").addEventListener("click", showPosition);
