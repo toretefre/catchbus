@@ -23,12 +23,13 @@ var prinsenkino = ["Prinsen Kinosenter", 63.426319, 10.393601];
 var samfundet = ["Studentersamfundet", 63.422609, 10.394647];
 
 
-function degreesToRadians(degrees) {
-    return degrees * Math.PI / 180;
-}
-
 function nameOfStop(stop) {
     return stop[0];
+}
+
+
+function degreesToRadians(degrees) {
+    return degrees * Math.PI / 180;
 }
 
 
