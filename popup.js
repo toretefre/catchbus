@@ -5,34 +5,70 @@ $( document ).ready(function() {
     console.log( "JQuery has started!" );
     navigator.geolocation.getCurrentPosition(function(position) {
         // Constructing test data
-        var departureTime = new Date().getTime();
+        var mode = 1;
         var routeNumber = 5;
-        var destination = "Dragvoll/Lohove";
+        var destination = "Dragvoll";
+        var now = new Date();
+        // test purposes
+        var minutesToNextDeparture = 0;
+        var departureTime = new Date(now.getTime() + minutesToNextDeparture * 60000);
         var user = ["Brukerposisjon", position.coords.latitude, position.coords.longitude];
-        var departure = [routeNumber, destination, departureTime];
-        showLocation(user, nameOfStop(samfundet), distanceInMetersBetweenUserAndStop(user, samfundet), departure);
+        var departure = [mode, routeNumber, destination, departureTime];
+        showLocation(user, nameOfStop(samfundet), distanceInMetersBetweenUserAndStop(user, samfundet), departure, now);
     });
     console.log( "JQuery has polled for location!" );
 });
 
 
-function showLocation(user, closestStop, distanceToClosestStop, departure) {
-    // test data
-    var currentTime = new Date();
-    var timeUntilDeparture = departure[2] - currentTime;
-
+function showLocation(user, closestStop, distanceToClosestStop, departure, now) {
     stations.placeholder = closestStop;
-    resultText.innerHTML =  "<span>Latitude: " + user[1].toFixed(6) + "</span>" +
-                            "<span><br>Longitude: " + user[2].toFixed(6) + "</span>" +
-                            "<span><br>Neste " + departure[0] + " mot " + departure[1] + " kjem om" +
-                            "<br>" + timeUntilDeparture + " minutt</span>" +
-                            "<span><br>Du er " + distanceToClosestStop + " meter unna " + closestStop + "</span>";
+    console.log(user[1].toFixed(6), user[2].toFixed(6));
+    
+    resultText.innerHTML =  "<span>" + findMode(departure[0]) + " " + departure[1] + " mot " + departure[2] + " " +
+                            timeUntilDeparture(departure[3], now) + "</span>" +
+                            "<span><br>Du er " + distanceToClosestStop + " meter-ish unna " + closestStop + ".</span>";
     console.log( "JQuery has displayed location!" )
 }
 
 // [name, lat, lon]
 var prinsenkino = ["Prinsen Kinosenter", 63.426319, 10.393601];
 var samfundet = ["Samfundet", 63.422609, 10.394647];
+
+
+function timeUntilDeparture(departureTime, now) {
+    var minutesUntil = (departureTime.getTime() - now.getTime()) / 60000;
+
+    switch (minutesUntil) {
+        case 0:
+            return "kjem ...NO! Det var synd.";
+        case 1:
+            return "kjem om ett minutt.";
+        case 2:
+            return "kjem om to minutt.";
+        case 3:
+            return "kjem om tre minutt.";
+        case 4:
+            return "kjem om fire minutt.";
+        case 5:
+            return "kjem om fem minutt.";
+        default:
+            return "kjem " + departureTime;
+    }
+}
+
+
+function findMode(mode) {
+    switch (mode) {
+        case 0:
+            return "Gå";
+        case 1:
+            return "Buss";
+        case 2:
+            return "Trikk";
+        case 3:
+            return "Tog";
+    }
+}
 
 
 function nameOfStop(stop) {
