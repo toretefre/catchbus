@@ -1,5 +1,5 @@
 html {
-    width:              200px;
+    min-width:          200px;
     min-height:         100px;
     background-color:   #A8AD00;
 }
