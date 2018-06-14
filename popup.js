@@ -40,7 +40,7 @@ function timeUntilDeparture(departureTime, now) {
 
     switch (minutesUntil) {
         case 0:
-            return "kjem ...NO! Det var synd.";
+            return "er rett rundt hjørnet!";
         case 1:
             return "kjem om ett minutt.";
         case 2:
