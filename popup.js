@@ -37,7 +37,7 @@ function getNearestStop(latitude, longitude) {
     console.log(latitude + " " + longitude);
     xhr.open("GET", "https://api.entur.org/api/geocoder/1.1/reverse?point.lat=" +
             latitude + "&point.lon=" + longitude +
-            "&lang=en&size=4&layers=address");
+            "&lang=en&size=10&layers=venue&category=onstreetBus");
     xhr.setRequestHeader("Content-Type", "text/json");
     xhr.send();
     console.log("XMLHttpRequest sent!");
