@@ -2,37 +2,49 @@ var resultText = document.getElementById("resultText");
 var stations = document.getElementById("stations");
 
 $( document ).ready(function() {
-    console.log( "JQuery has started!" );
+    console.log( "Document loaded, starting calls!" );
     navigator.geolocation.getCurrentPosition(function(position) {
-        // Constructing test data
-        var mode = 1;
-        var routeNumber = 5;
-        var destination = "Dragvoll";
-        var now = new Date();
-        // test purposes
-        var minutesToNextDeparture = 0;
-        var departureTime = new Date(now.getTime() + minutesToNextDeparture * 60000);
-        var user = ["Brukerposisjon", position.coords.latitude, position.coords.longitude];
-        var departure = [mode, routeNumber, destination, departureTime];
-        showLocation(user, nameOfStop(samfundet), distanceInMetersBetweenUserAndStop(user, samfundet), departure, now);
+        var latitude = position.coords.latitude;
+        var longitude = position.coords.longitude;
+        var nearestStop = getNearestStop(latitude, longitude);
+        console.log( "getNearestStop has been called!" );
     });
-    console.log( "JQuery has polled for location!" );
 });
 
 
-function showLocation(user, closestStop, distanceToClosestStop, departure, now) {
-    stations.placeholder = closestStop;
-    console.log(user[1].toFixed(6), user[2].toFixed(6));
+function showLocation() {
+    console.log("showLocation called!");
+    // Constructing test data
+    var mode = 1;
+    var routeNumber = 5;
+    var destination = "Dragvoll";
+    var now = new Date();
+    // test purposes
+    var minutesToNextDeparture = 1;
+    var departureTime = new Date(now.getTime() + minutesToNextDeparture * 60000);
+    var departure = [mode, routeNumber, destination, departureTime];
     
     resultText.innerHTML =  "<span>" + findMode(departure[0]) + " " + departure[1] + " mot " + departure[2] + " " +
-                            timeUntilDeparture(departure[3], now) + "</span>" +
-                            "<span><br>Du er " + distanceToClosestStop + " meter-ish unna " + closestStop + ".</span>";
-    console.log( "JQuery has displayed location!" )
+                            timeUntilDeparture(departure[3], now) + "</span>";
+
+    console.log("showLocation finished!");
 }
 
-// [name, lat, lon]
-var prinsenkino = ["Prinsen Kinosenter", 63.426319, 10.393601];
-var samfundet = ["Samfundet", 63.422609, 10.394647];
+
+function getNearestStop(latitude, longitude) {
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", "https://api.entur.org/api/geocoder/1.1/reverse?point.lat=" +
+            latitude + "&point.lon=" + longitude +
+            "&lang=en&size=4&layers=address");
+    xhr.send();
+    console.log("XMLHttpRequest sent!");
+    xhr.onreadystatechange = function () {
+        if(xhr.readyState === 4 && xhr.status === 200) {
+            console.log("Operation done, 200 received!");
+            showLocation();
+        }
+    }
+}
 
 
 function timeUntilDeparture(departureTime, now) {
@@ -69,38 +81,3 @@ function findMode(mode) {
             return "Tog";
     }
 }
-
-
-function nameOfStop(stop) {
-    return stop[0];
-}
-
-
-function degreesToRadians(degrees) {
-    return degrees * Math.PI / 180;
-}
-
-
-function distanceInMetersBetweenUserAndStop(user, stop) {
-    const earthRadiusKm = 6371;
-
-    var userLat = user[1];
-    var userLon = user[2];
-
-    var stopLat = stop[1];
-    var stopLon = stop[2];
-
-    var dLat = degreesToRadians(stopLat - userLat);
-    var dLon = degreesToRadians(stopLon - userLon);
-
-    userLat = degreesToRadians(userLat);
-    stopLat = degreesToRadians(stopLat);
-
-    var a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-            Math.sin(dLon/2) * Math.sin(dLon/2) * Math.cos(userLat) * Math.cos(stopLat);
-    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    return ((earthRadiusKm * c) * 1000).toFixed(0);
-}
-
-// Not currently needed because showPosition is triggered on load
-// document.getElementById("geoStationButton").addEventListener("click", showPosition);
