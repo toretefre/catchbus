@@ -1,12 +1,12 @@
 var resultText = document.getElementById("resultText");
-var stations = document.getElementById("stations");
+var jsondata;
 
 $( document ).ready(function() {
     console.log( "Document loaded, starting calls!" );
     navigator.geolocation.getCurrentPosition(function(position) {
         var latitude = position.coords.latitude;
         var longitude = position.coords.longitude;
-        var nearestStop = getNearestStop(latitude, longitude);
+        getNearestStop(latitude, longitude);
         console.log( "getNearestStop has been called!" );
     });
 });
@@ -28,19 +28,23 @@ function showLocation() {
                             timeUntilDeparture(departure[3], now) + "</span>";
 
     console.log("showLocation finished!");
+    console.log("JSON-data: " + jsondata);
 }
 
 
 function getNearestStop(latitude, longitude) {
     var xhr = new XMLHttpRequest();
+    console.log(latitude + " " + longitude);
     xhr.open("GET", "https://api.entur.org/api/geocoder/1.1/reverse?point.lat=" +
             latitude + "&point.lon=" + longitude +
             "&lang=en&size=4&layers=address");
+    xhr.setRequestHeader("Content-Type", "text/json");
     xhr.send();
     console.log("XMLHttpRequest sent!");
     xhr.onreadystatechange = function () {
         if(xhr.readyState === 4 && xhr.status === 200) {
             console.log("Operation done, 200 received!");
+            jsondata = xhr.response;
             showLocation();
         }
     }
