@@ -1,11 +1,7 @@
-html {
+html, body {
     min-width:          200px;
     min-height:         100px;
     background-color:   #A8AD00;
-}
-
-div {
-    width:              100%;
 }
 
 p, h1, h2, h3 {

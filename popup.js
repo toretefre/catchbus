@@ -25,7 +25,7 @@ function showLocation(latitude, longitude) {
     var departureTime = new Date(now.getTime() + minutesToNextDeparture * 60000);
     var departure = [mode, routeNumber, destination, departureTime];
     
-    resultText.innerHTML = '<iframe width="300" height="170" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" src="https://maps.google.com/maps?q=' + latitude + ',' + longitude + '&hl=es;z=14&amp;output=embed"></iframe>';
+    resultText.innerHTML = '<iframe width="300" height="300" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" src="https://maps.google.com/maps?q=' + latitude + ',' + longitude + '&hl=es;z=14&amp;output=embed"></iframe>';
 
     console.log("showLocation finished!");
 }
