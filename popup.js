@@ -13,7 +13,7 @@ $( document ).ready(function() {
 });
 
 // Changes the HTML when data is ready
-function showLocation() {
+function showLocation(latitude, longitude) {
     console.log("showLocation called!");
     // Constructing test data
     var mode = 1;
@@ -25,8 +25,7 @@ function showLocation() {
     var departureTime = new Date(now.getTime() + minutesToNextDeparture * 60000);
     var departure = [mode, routeNumber, destination, departureTime];
     
-    resultText.innerHTML =  "<span>" + findMode(departure[0]) + " " + departure[1] + " mot " + departure[2] + " " +
-                            timeUntilDeparture(departure[3], now) + "</span>";
+    resultText.innerHTML = '<iframe width="300" height="170" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" src="https://maps.google.com/maps?q=' + latitude + ',' + longitude + '&hl=es;z=14&amp;output=embed"></iframe>';
 
     console.log("showLocation finished!");
 }
@@ -51,7 +50,7 @@ function getNearestStops(latitude, longitude) {
         if(xhr.readyState === 4 && xhr.status === 200) {
             console.log("XMLHttpRequest returned the following JSON with status code 200:");
             parseJSONData(xhr.response);
-            showLocation();
+            showLocation(latitude, longitude);
         }
     }
 }
@@ -59,7 +58,7 @@ function getNearestStops(latitude, longitude) {
 
 // Parses JSON station data received from Entur into Javascript objects
 function parseJSONData(jsonToParse) {
-    console.log("Raw JSON: " + jsonToParse);
+    console.log(jsonToParse);
     var parsedJSON = JSON.parse(jsonToParse);
     console.log("JSON parsed! List of IDs:");
     for (var id in parsedJSON) {
@@ -69,7 +68,7 @@ function parseJSONData(jsonToParse) {
             var distance = -1;
             var latitude = -1;
             var longitude = -1;
-            console.log(id);
+            console.log(id.gid);
             closestStops.push([stopName, stopID, distance, latitude, longitude]);
         }
     }
