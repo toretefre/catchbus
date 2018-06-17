@@ -61,16 +61,14 @@ function parseJSONData(jsonToParse) {
     console.log(jsonToParse);
     var parsedJSON = JSON.parse(jsonToParse);
     console.log("JSON parsed! List of IDs:");
-    for (var id in parsedJSON) {
-        if (parsedJSON.hasOwnProperty(id)) {
-            var stopName = "";
-            var stopID = -1;
-            var distance = -1;
-            var latitude = -1;
-            var longitude = -1;
-            console.log(id.gid);
-            closestStops.push([stopName, stopID, distance, latitude, longitude]);
-        }
+    for (var i = 0; i < numberOfStops; i++) {
+        var stopName = parsedJSON["features"][i]["properties"]["name"];
+        var stopID = parsedJSON["features"][i]["properties"]["id"];
+        var distance = parsedJSON["features"][i]["properties"]["distance"];
+        var latitude = parsedJSON["features"][i]["geometry"]["coordinates"][1];
+        var longitude = parsedJSON["features"][i]["geometry"]["coordinates"][0];
+        closestStops.push([stopName, stopID, distance, latitude, longitude]);
+
     }
     console.log("Array containg closest stops: " + closestStops);
 }
