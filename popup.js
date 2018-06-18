@@ -13,25 +13,36 @@ $( document ).ready(function() {
 });
 
 // Changes the HTML when data is ready
-function showLocation(latitude, longitude) {
+function showLocation(closestStops, latitude, longitude) {
     console.log("showLocation called!");
-    // Constructing test data
-    var mode = 1;
-    var routeNumber = 5;
-    var destination = "Dragvoll";
-    var now = new Date();
-    // test purposes
-    var minutesToNextDeparture = 1;
-    var departureTime = new Date(now.getTime() + minutesToNextDeparture * 60000);
-    var departure = [mode, routeNumber, destination, departureTime];
-    
-    resultText.innerHTML = '<iframe width="300" height="300" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" src="https://maps.google.com/maps?q=' + latitude + ',' + longitude + '&hl=es;z=14&amp;output=embed"></iframe>';
-
+    var stopsTable = "<table><th>Haldeplass</th><th>Transportmiddel</th><th>StoppID</th><th>Avstand</th>";
+    for (var i = 0; i < closestStops.length; i++) {
+        stopsTable +=
+            "<tr><td>"  + getStationName(closestStops[i][1]) +
+            "</td><td>" + getMode(closestStops[i][0]) +
+            "</td><td>" + getStopID(closestStops[i][2]) +
+            "</td><td>" + getDistance(closestStops[i][3]) + "</td></tr>";
+    }
+    console.log(stopsTable);
+    resultText.innerHTML = stopsTable;
     console.log("showLocation finished!");
 }
 
+function getStationName(station) {
+    return station;
+}
+
+function getStopID(IdString) {
+    return (IdString.slice(14));
+}
+
+function getDistance(distance) {
+    return (distance*1000 + " meter");
+}
+
+
 // Defines how many nearby stops to locate:
-var numberOfStops = 2;
+var numberOfStops = 4;
 // Defines what kind of stations to locate, onstreetBus is only bus
 var mode = "onstreetBus";
 
@@ -50,7 +61,7 @@ function getNearestStops(latitude, longitude) {
         if(xhr.readyState === 4 && xhr.status === 200) {
             console.log("XMLHttpRequest returned the following JSON with status code 200:");
             parseJSONData(xhr.response);
-            showLocation(latitude, longitude);
+            showLocation(closestStops, latitude, longitude);
         }
     }
 }
@@ -62,13 +73,13 @@ function parseJSONData(jsonToParse) {
     var parsedJSON = JSON.parse(jsonToParse);
     console.log("JSON parsed! List of IDs:");
     for (var i = 0; i < numberOfStops; i++) {
+        var category = parsedJSON["features"][i]["properties"]["category"];
         var stopName = parsedJSON["features"][i]["properties"]["name"];
         var stopID = parsedJSON["features"][i]["properties"]["id"];
         var distance = parsedJSON["features"][i]["properties"]["distance"];
         var latitude = parsedJSON["features"][i]["geometry"]["coordinates"][1];
         var longitude = parsedJSON["features"][i]["geometry"]["coordinates"][0];
-        closestStops.push([stopName, stopID, distance, latitude, longitude]);
-
+        closestStops.push([category, stopName, stopID, distance, latitude, longitude]);
     }
     console.log("Array containg closest stops: " + closestStops);
 }
@@ -97,15 +108,12 @@ function timeUntilDeparture(departureTime, now) {
 }
 
 // Translates digit representation into form of transportation
-function findMode(mode) {
+function getMode(mode) {
+    mode += "";
     switch (mode) {
-        case 0:
-            return "Gå";
-        case 1:
+        case "onstreetBus":
             return "Buss";
-        case 2:
-            return "Trikk";
-        case 3:
-            return "Tog";
+        default:
+            return "Usikker";
     }
 }
