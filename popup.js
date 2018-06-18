@@ -54,7 +54,7 @@ function getNearestStops(latitude, longitude) {
     xhr.open("GET", "https://api.entur.org/api/geocoder/1.1/reverse?point.lat=" +
             latitude + "&point.lon=" + longitude +
             "&lang=en&size=" + numberOfStops + "&layers=venue&category=" + mode);
-    xhr.setRequestHeader("Content-Type", "text/json");
+    xhr.setRequestHeader("ET-Client-Name", "https://github.com/toretefre/catchbus");
     xhr.send();
     console.log("XMLHttpRequest to find the " + numberOfStops + " closest stops sent!");
     xhr.onreadystatechange = function () {
