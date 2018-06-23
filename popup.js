@@ -1,9 +1,18 @@
 const resultText = document.getElementById("resultText");
+// Array containing closest public transport stations
 let closestStops = [];
+// Array containing closest city bike racks
+let closestRacks = [];
+// Defines how many nearby stops to locate:
+const numberOfStops = 4;
+// Defines what kind of stations to locate, onstreetBus is only bus
+const mode = "onstreetBus";
+
 
 // Executed when document is loaded
 $(document).ready(function () {
     console.log("Document loaded, polling for position...");
+    getAllCityBikesTrondheim();
     navigator.geolocation.getCurrentPosition(function (position) {
         let latitude = position.coords.latitude;
         let longitude = position.coords.longitude;
@@ -29,27 +38,6 @@ function showLocation(closestStops) {
 }
 
 
-function getStationName(station) {
-    return station;
-}
-
-
-function getStopID(IdString) {
-    return (IdString.slice(14));
-}
-
-
-function getDistance(distance) {
-    return (distance * 1000 + " meter");
-}
-
-
-// Defines how many nearby stops to locate:
-const numberOfStops = 4;
-// Defines what kind of stations to locate, onstreetBus is only bus
-let mode = "onstreetBus";
-
-
 // Connects with Entur-API to find nearby stations based on coordinates
 function getNearestStops(latitude, longitude) {
     console.log("getNearestStops called with coords " + latitude + ", " + longitude);
@@ -64,9 +52,58 @@ function getNearestStops(latitude, longitude) {
         if (xhr.readyState === 4 && xhr.status === 200) {
             console.log("XMLHttpRequest returned the following JSON with status code 200:");
             parseStationData(xhr.response);
-            showLocation(closestStops, latitude, longitude);
+            showLocation(closestStops);
         }
     }
+}
+
+
+function getAllCityBikesTrondheim() {
+    console.log("getAllCityBikesStationsTrondheim called");
+    let xhr = new XMLHttpRequest();
+    xhr.open("GET", "http://gbfs.urbansharing.com/trondheim/station_information.json");
+    xhr.send();
+    console.log("XMLHttpRequest to find all Trondheim citybike stations sent");
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4 && xhr.status === 200) {
+            console.log("JSON containing city bike racks received:");
+            parseCityBikeRacksTrondheim(xhr.response);
+        }
+    }
+}
+
+
+function parseCityBikeRacksTrondheim(jsonToParse) {
+    let parsedJSON = JSON.parse(jsonToParse);
+    console.log("Rack JSON parsed! List of closest racks:");
+    for (let i = 0; i < 10; i++) {
+        let rackID = parsedJSON["data"]["stations"][i]["station_id"];
+        let rackName = parsedJSON["data"]["stations"][i]["name"];
+        let rackCapacity = parsedJSON["data"]["stations"][i]["capacity"];
+        let rackAddress = parsedJSON["data"]["stations"][i]["address"];
+        let rackLat = parsedJSON["data"]["stations"][i]["lat"];
+        let rackLon = parsedJSON["data"]["stations"][i]["lon"];
+
+        closestRacks.push([rackID, rackName, rackCapacity, rackAddress, rackLat, rackLon]);
+    }
+    console.log(closestRacks);
+}
+
+
+// Parses JSON station data received from Entur into Javascript objects
+function parseStationData(jsonToParse) {
+    let parsedJSON = JSON.parse(jsonToParse);
+    console.log("Station JSON parsed! List of closest stations:");
+    for (let i = 0; i < numberOfStops; i++) {
+        let category = parsedJSON["features"][i]["properties"]["category"];
+        let stopName = parsedJSON["features"][i]["properties"]["name"];
+        let stopID = parsedJSON["features"][i]["properties"]["id"];
+        let distance = parsedJSON["features"][i]["properties"]["distance"];
+        let latitude = parsedJSON["features"][i]["geometry"]["coordinates"][1];
+        let longitude = parsedJSON["features"][i]["geometry"]["coordinates"][0];
+        closestStops.push([category, stopName, stopID, distance, latitude, longitude]);
+    }
+    console.log(closestStops);
 }
 
 
@@ -82,24 +119,6 @@ function getNextDepartures(stopID) {
             console.log("")
         }
     }
-}
-
-
-// Parses JSON station data received from Entur into Javascript objects
-function parseStationData(jsonToParse) {
-    console.log(jsonToParse);
-    let parsedJSON = JSON.parse(jsonToParse);
-    console.log("JSON parsed! List of IDs:");
-    for (let i = 0; i < numberOfStops; i++) {
-        let category = parsedJSON["features"][i]["properties"]["category"];
-        let stopName = parsedJSON["features"][i]["properties"]["name"];
-        let stopID = parsedJSON["features"][i]["properties"]["id"];
-        let distance = parsedJSON["features"][i]["properties"]["distance"];
-        let latitude = parsedJSON["features"][i]["geometry"]["coordinates"][1];
-        let longitude = parsedJSON["features"][i]["geometry"]["coordinates"][0];
-        closestStops.push([category, stopName, stopID, distance, latitude, longitude]);
-    }
-    console.log("Array containg closest stops: " + closestStops);
 }
 
 
@@ -125,6 +144,7 @@ function timeUntilDeparture(departureTime, now) {
     }
 }
 
+
 // Translates digit representation into form of transportation
 function getMode(mode) {
     mode += "";
@@ -134,4 +154,18 @@ function getMode(mode) {
         default:
             return "Usikker";
     }
+}
+
+function getStationName(station) {
+    return station;
+}
+
+
+function getStopID(IdString) {
+    return (IdString.slice(14));
+}
+
+
+function getDistance(distance) {
+    return (distance * 1000 + " meter");
 }
