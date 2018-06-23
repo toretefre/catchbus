@@ -1,24 +1,24 @@
-var resultText = document.getElementById("resultText");
-var closestStops = [];
+const resultText = document.getElementById("resultText");
+let closestStops = [];
 
 // Executed when document is loaded
-$( document ).ready(function() {
-    console.log( "Document loaded, polling for position..." );
-    navigator.geolocation.getCurrentPosition(function(position) {
-        var latitude = position.coords.latitude;
-        var longitude = position.coords.longitude;
+$(document).ready(function () {
+    console.log("Document loaded, polling for position...");
+    navigator.geolocation.getCurrentPosition(function (position) {
+        let latitude = position.coords.latitude;
+        let longitude = position.coords.longitude;
         console.log("Position found, calling getNearestStops with coords " + latitude + ", " + longitude);
         getNearestStops(latitude, longitude);
     });
 });
 
 // Changes the HTML when data is ready
-function showLocation(closestStops, latitude, longitude) {
+function showLocation(closestStops) {
     console.log("showLocation called!");
-    var stopsTable = "<table><th>Haldeplass</th><th>Transportmiddel</th><th>StoppID</th><th>Avstand</th>";
-    for (var i = 0; i < closestStops.length; i++) {
+    let stopsTable = "<table><th>Haldeplass</th><th>Transportmiddel</th><th>StoppID</th><th>Avstand</th>";
+    for (let i = 0; i < closestStops.length; i++) {
         stopsTable +=
-            "<tr><td>"  + getStationName(closestStops[i][1]) +
+            "<tr><td>" + getStationName(closestStops[i][1]) +
             "</td><td>" + getMode(closestStops[i][0]) +
             "</td><td>" + getStopID(closestStops[i][2]) +
             "</td><td>" + getDistance(closestStops[i][3]) + "</td></tr>";
@@ -28,57 +28,75 @@ function showLocation(closestStops, latitude, longitude) {
     console.log("showLocation finished!");
 }
 
+
 function getStationName(station) {
     return station;
 }
+
 
 function getStopID(IdString) {
     return (IdString.slice(14));
 }
 
+
 function getDistance(distance) {
-    return (distance*1000 + " meter");
+    return (distance * 1000 + " meter");
 }
 
 
 // Defines how many nearby stops to locate:
-var numberOfStops = 4;
+const numberOfStops = 4;
 // Defines what kind of stations to locate, onstreetBus is only bus
-var mode = "onstreetBus";
+let mode = "onstreetBus";
 
 
 // Connects with Entur-API to find nearby stations based on coordinates
 function getNearestStops(latitude, longitude) {
-    var xhr = new XMLHttpRequest();
     console.log("getNearestStops called with coords " + latitude + ", " + longitude);
+    let xhr = new XMLHttpRequest();
     xhr.open("GET", "https://api.entur.org/api/geocoder/1.1/reverse?point.lat=" +
-            latitude + "&point.lon=" + longitude +
-            "&lang=en&size=" + numberOfStops + "&layers=venue&category=" + mode);
+        latitude + "&point.lon=" + longitude +
+        "&lang=en&size=" + numberOfStops + "&layers=venue&category=" + mode);
     xhr.setRequestHeader("ET-Client-Name", "https://github.com/toretefre/catchbus");
     xhr.send();
     console.log("XMLHttpRequest to find the " + numberOfStops + " closest stops sent!");
     xhr.onreadystatechange = function () {
-        if(xhr.readyState === 4 && xhr.status === 200) {
+        if (xhr.readyState === 4 && xhr.status === 200) {
             console.log("XMLHttpRequest returned the following JSON with status code 200:");
-            parseJSONData(xhr.response);
+            parseStationData(xhr.response);
             showLocation(closestStops, latitude, longitude);
         }
     }
 }
 
 
+function getNextDepartures(stopID) {
+    console.log("getNextDepartures called for " + stopID);
+    let xhr = new XMLHttpRequest();
+    xhr.open("GET", "https://api.entur.org/journeyplanner/2.0/index/graphql");
+    xhr.setRequestHeader("ET-Client-Name", "https://github.com/toretefre/catchbus");
+    xhr.send();
+    console.log("XMLHttpRequest to find next departures sent!");
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4 && xhr.status === 200) {
+            console.log("")
+        }
+    }
+}
+
+
 // Parses JSON station data received from Entur into Javascript objects
-function parseJSONData(jsonToParse) {
+function parseStationData(jsonToParse) {
     console.log(jsonToParse);
-    var parsedJSON = JSON.parse(jsonToParse);
+    let parsedJSON = JSON.parse(jsonToParse);
     console.log("JSON parsed! List of IDs:");
-    for (var i = 0; i < numberOfStops; i++) {
-        var category = parsedJSON["features"][i]["properties"]["category"];
-        var stopName = parsedJSON["features"][i]["properties"]["name"];
-        var stopID = parsedJSON["features"][i]["properties"]["id"];
-        var distance = parsedJSON["features"][i]["properties"]["distance"];
-        var latitude = parsedJSON["features"][i]["geometry"]["coordinates"][1];
-        var longitude = parsedJSON["features"][i]["geometry"]["coordinates"][0];
+    for (let i = 0; i < numberOfStops; i++) {
+        let category = parsedJSON["features"][i]["properties"]["category"];
+        let stopName = parsedJSON["features"][i]["properties"]["name"];
+        let stopID = parsedJSON["features"][i]["properties"]["id"];
+        let distance = parsedJSON["features"][i]["properties"]["distance"];
+        let latitude = parsedJSON["features"][i]["geometry"]["coordinates"][1];
+        let longitude = parsedJSON["features"][i]["geometry"]["coordinates"][0];
         closestStops.push([category, stopName, stopID, distance, latitude, longitude]);
     }
     console.log("Array containg closest stops: " + closestStops);
@@ -87,7 +105,7 @@ function parseJSONData(jsonToParse) {
 
 // Translates minutes until departure to readable text
 function timeUntilDeparture(departureTime, now) {
-    var minutesUntil = (departureTime.getTime() - now.getTime()) / 60000;
+    let minutesUntil = (departureTime.getTime() - now.getTime()) / 60000;
 
     switch (minutesUntil) {
         case 0:
