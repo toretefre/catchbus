@@ -32,7 +32,6 @@ function showLocation(closestStops) {
             "</td><td>" + getStopID(closestStops[i][2]) +
             "</td><td>" + getDistance(closestStops[i][3]) + "</td></tr>";
     }
-    console.log(stopsTable);
     resultText.innerHTML = stopsTable;
     console.log("showLocation finished!");
 }
@@ -81,8 +80,8 @@ function parseCityBikeRacksTrondheim(jsonToParse) {
         let rackName = parsedJSON["data"]["stations"][i]["name"];
         let rackCapacity = parsedJSON["data"]["stations"][i]["capacity"];
         let rackAddress = parsedJSON["data"]["stations"][i]["address"];
-        let rackLat = parsedJSON["data"]["stations"][i]["lat"];
-        let rackLon = parsedJSON["data"]["stations"][i]["lon"];
+        let rackLat = parsedJSON["data"]["stations"][i]["lon"];
+        let rackLon = parsedJSON["data"]["stations"][i]["lat"];
 
         closestRacks.push([rackID, rackName, rackCapacity, rackAddress, rackLat, rackLon]);
     }
