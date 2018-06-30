@@ -224,8 +224,13 @@ function getMode(mode) {
 
 function getNextDepartures(stopID) {
     let graph = graphql(
-        "https://api.entur.org/journeyplanner/2.0/index/graphql"
-    );
+        "https://api.entur.org/journeyplanner/2.0/index/graphql", {
+            alwaysAutodeclare: true,
+            headers: {
+                "ET-Client-Name": "https://github.com/toretefre/catchbus"
+            },
+        })
+    ;
 
     let nextDepartures = graph(
         `{
@@ -258,8 +263,8 @@ function getNextDepartures(stopID) {
         }`
     );
 
-    nextDepartures().then(function (users) {
-        console.log(users);
+    nextDepartures().then(function (response) {
+        console.log(response);
     })
 }
 
