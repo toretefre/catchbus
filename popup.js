@@ -6,7 +6,7 @@ let closestRacks = [];
 // Array containing all elements to be display
 let closestEverything = [];
 // Defines how many nearby stops to locate:
-const numberOfStops = 19;
+const numberOfStops = 1;
 // Defines what kind of stations to locate, onstreetBus is only bus
 const mode = "onstreetBus";
 
@@ -95,6 +95,7 @@ function parseStationData(jsonToParse) {
         let distance = parsedJSON["features"][i]["properties"]["distance"];
         let latitude = parsedJSON["features"][i]["geometry"]["coordinates"][1];
         let longitude = parsedJSON["features"][i]["geometry"]["coordinates"][0];
+        let nextDepartures = getNextDepartures(stopID);
 
         closestStops.push([category, stopName, stopID, distance, latitude, longitude]);
     }
@@ -168,22 +169,6 @@ function parseCityBikeRacksTrondheim(jsonToParse) {
 }
 
 
-// Currently unused function to fetch next departures from StopID
-function getNextDepartures(stopID) {
-    console.log("getNextDepartures called for " + stopID);
-    let xhr = new XMLHttpRequest();
-    xhr.open("GET", "https://api.entur.org/journeyplanner/2.0/index/graphql");
-    xhr.setRequestHeader("ET-Client-Name", "https://github.com/toretefre/catchbus");
-    xhr.send();
-    console.log("XMLHttpRequest to find next departures sent!");
-    xhr.onreadystatechange = function () {
-        if (xhr.readyState === 4 && xhr.status === 200) {
-            console.log("");
-        }
-    }
-}
-
-
 // Translates minutes until departure to readable text
 function timeUntilDeparture(departureTime, now) {
     let minutesUntil = (departureTime.getTime() - now.getTime()) / 60000;
@@ -206,7 +191,7 @@ function timeUntilDeparture(departureTime, now) {
     }
 }
 
-
+// Used to calculate distance to nearest city bikes
 function distanceInMetersBetweenCoordinates(lat1, lon1, lat2, lon2) {
   const earthRadiusKm = 6371;
 
@@ -234,6 +219,48 @@ function getMode(mode) {
         default:
             return "Usikker";
     }
+}
+
+
+function getNextDepartures(stopID) {
+    let graph = graphql(
+        "https://api.entur.org/journeyplanner/2.0/index/graphql"
+    );
+
+    let nextDepartures = graph(
+        `{
+            stopPlace(id: "NSR:StopPlace:42660") {
+                id
+                name
+                estimatedCalls(startTime:"2018-06-30T20:25:00+0200" timeRange: 7210000, numberOfDepartures: 10, omitNonBoarding:true) {     
+                    realtime
+                    realtimeState
+                    aimedDepartureTime
+                    expectedDepartureTime
+                    forBoarding
+                    destinationDisplay {
+                        frontText
+                    }
+                    notices {
+                        text
+                    }
+                    serviceJourney {
+                        journeyPattern {
+                            line {
+                                publicCode
+                                name
+                                transportMode
+                            }
+                        }
+                    }
+                }
+            }
+        }`
+    );
+
+    nextDepartures().then(function (users) {
+        console.log(users);
+    })
 }
 
 
