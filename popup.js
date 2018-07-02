@@ -1,3 +1,5 @@
+const now = new Date();
+
 const resultText = document.getElementById("resultText");
 // Array containing closest public transport stations
 let closestStops = [];
@@ -22,7 +24,6 @@ $(document).ready(function () {
 function getPosition() {
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(savePosition);
-        console.log("Geolocation available, polling...");
     }
     else {
         setTimeout(function(){
@@ -40,24 +41,21 @@ function savePosition(position) {
     let lon = position.coords.longitude;
     localStorage.setItem("latitude", lat);
     localStorage.setItem("longitude", lon);
-    console.log("Position stored: ", lat + ", " + lon);
     getNearestStops();
 }
 
 
 // Changes the HTML when data is ready
 function showLocation(closestStops) {
-    console.log("showLocation called!");
-    let stopsTable = "<table><th>Haldeplass</th><th>Transportmiddel</th><th>StoppID</th><th>Avstand</th>";
+    let stopsTable = "<table><th>Haldeplass</th><th>Transportmiddel</th><th>Avstand</th>";
     for (let i = 0; i < closestStops.length; i++) {
         stopsTable +=
             "<tr><td>" + getStationName(closestStops[i][1]) +
             "</td><td>" + getMode(closestStops[i][0]) +
-            "</td><td>" + getStopID(closestStops[i][2]) +
             "</td><td>" + getDistance(closestStops[i][3]) + "</td></tr>";
     }
     resultText.innerHTML = stopsTable;
-    console.log("showLocation finished!");
+    console.log("finished!");
 }
 
 
@@ -72,10 +70,8 @@ function getNearestStops() {
         "&lang=en&size=" + numberOfStops + "&layers=venue");
     xhr.setRequestHeader("ET-Client-Name", "https://github.com/toretefre/catchbus");
     xhr.send();
-    console.log("XMLHttpRequest to find the " + numberOfStops + " closest stops sent!");
     xhr.onreadystatechange = function () {
         if (xhr.readyState === 4 && xhr.status === 200) {
-            console.log("XMLHttpRequest returned the following JSON with status code 200:");
             parseStationData(xhr.response);
             showLocation(closestStops);
         }
@@ -86,9 +82,7 @@ function getNearestStops() {
 // Parses JSON station data received from Entur into Javascript objects
 function parseStationData(jsonToParse) {
     let parsedJSON = JSON.parse(jsonToParse);
-    console.log("Station JSON parsed! List of closest stations:");
     for (let i = 0; i < parsedJSON["features"].length; i++) {
-        console.log(parsedJSON);
         let category = parsedJSON["features"][i]["properties"]["category"];
         let stopName = parsedJSON["features"][i]["properties"]["name"];
         let stopID = getStopID(parsedJSON["features"][i]["properties"]["id"]);
@@ -105,14 +99,11 @@ function parseStationData(jsonToParse) {
 
 // Connects with Trondheim City Bikes API to fetch all city bike racks
 function getAllCityBikesTrondheim() {
-    console.log("getAllCityBikesStationsTrondheim called");
     let xhr = new XMLHttpRequest();
     xhr.open("GET", "http://gbfs.urbansharing.com/trondheim/station_information.json");
     xhr.send();
-    console.log("Requested system information Trondheim City Bikes!");
     xhr.onreadystatechange = function () {
         if (xhr.readyState === 4 && xhr.status === 200) {
-            console.log("JSON containing city bike information received:");
             parseCityBikeRacksTrondheim(xhr.response);
         }
     }
@@ -127,7 +118,6 @@ function getCityBikeStatusTrondheim() {
     console.log("Requested system status Trondheim City Bikes!");
     xhr.onreadystatechange = function () {
         if (xhr.readyState === 4 && xhr.status === 200) {
-            console.log("JSON containing city bike status received:");
             parseCityBikeStatusTrondheim(xhr.response);
         }
     }
@@ -230,8 +220,10 @@ function getMode(mode) {
             return "Ferje";
         case "ferryStop":
             return "Ferje";
+        case "lift":
+            return "Heis";
         default:
-            return "Sære greier";
+            return "Anna";
     }
 }
 
@@ -248,13 +240,13 @@ function getNextDepartures(stopID) {
         return i+1;
     }
 
-    const now = new Date();
     const hours = addZero(now.getHours());
     const minutes = addZero(now.getMinutes());
     const seconds = addZero(now.getSeconds());
     const day = addZero(now.getDate());
     const month = addZero(correctMonth(now.getMonth()));
     const year = now.getFullYear();
+
     const startTime = year + "-" + month + "-" + day + "T" + hours + ":" + minutes + ":" + seconds + "+0200";
     console.log(startTime);
 
