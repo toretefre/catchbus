@@ -223,37 +223,58 @@ function getMode(mode) {
 
 
 function getNextDepartures(stopID) {
+    function addZero(i) {
+        if (i < 10) {
+            i = "0" + i;
+        }
+        return i;
+    }
+
+    function correctMonth(i) {
+        return i+1;
+    }
+
+    const now = new Date();
+    const hours = addZero(now.getHours());
+    const minutes = addZero(now.getMinutes());
+    const seconds = addZero(now.getSeconds());
+    const day = addZero(now.getDate());
+    const month = addZero(correctMonth(now.getMonth()));
+    const year = now.getFullYear();
+    const startTime = year + "-" + month + "-" + day + "T" + hours + ":" + minutes + ":" + seconds + "+0200";
+    console.log(startTime);
+
     fetch('https://api.entur.org/journeyplanner/2.0/index/graphql', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query: `
         {
-          stopPlace(id: "NSR:StopPlace:42660") {
-            id
-            name
-            estimatedCalls(startTime:"2018-06-30T20:25:00+0200" timeRange: 7210000, numberOfDepartures: 10, omitNonBoarding:true) {     
-              realtime
-              aimedDepartureTime
-              expectedDepartureTime
-              forBoarding
-              destinationDisplay {
-                frontText
-              }
-              serviceJourney {
-                journeyPattern {
-                  line {
-                    publicCode
-                    operator {
-                      id
+            stopPlace(id: "NSR:StopPlace:` + stopID + `") {
+                id
+                name
+                estimatedCalls(startTime:"` + startTime + `" timeRange: 7210000, numberOfDepartures: 10, omitNonBoarding:true) {
+                    realtime
+                    aimedDepartureTime
+                    expectedDepartureTime
+                    forBoarding
+                    destinationDisplay {
+                        frontText
                     }
-                    id
-                    name
-                    transportMode
-                  }
+                    serviceJourney {
+                        journeyPattern {
+                            line {
+                                publicCode
+                                operator {
+                                    id
+                                }
+                                id
+                                name
+                                transportMode
+                            }
+                        }
+                    }
                 }
-              }
             }
-          }
         }
         `}),
     })
