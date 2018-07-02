@@ -13,6 +13,7 @@
 
   "permissions": [
     "activeTab",
-    "geolocation"
+    "geolocation",
+    "https://api.entur*"
    ]
 }

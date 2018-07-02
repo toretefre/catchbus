@@ -6,7 +6,7 @@ let closestRacks = [];
 // Array containing all elements to be display
 let closestEverything = [];
 // Defines how many nearby stops to locate:
-const numberOfStops = 1;
+const numberOfStops = 5;
 // Defines what kind of stations to locate, onstreetBus is only bus
 const mode = "onstreetBus";
 
@@ -223,49 +223,42 @@ function getMode(mode) {
 
 
 function getNextDepartures(stopID) {
-    let graph = graphql(
-        "https://api.entur.org/journeyplanner/2.0/index/graphql", {
-            alwaysAutodeclare: true,
-            headers: {
-                "ET-Client-Name": "https://github.com/toretefre/catchbus"
-            },
-        })
-    ;
-
-    let nextDepartures = graph(
-        `{
-            stopPlace(id: "NSR:StopPlace:42660") {
-                id
-                name
-                estimatedCalls(startTime:"2018-06-30T20:25:00+0200" timeRange: 7210000, numberOfDepartures: 10, omitNonBoarding:true) {     
-                    realtime
-                    realtimeState
-                    aimedDepartureTime
-                    expectedDepartureTime
-                    forBoarding
-                    destinationDisplay {
-                        frontText
+    fetch('https://api.entur.org/journeyplanner/2.0/index/graphql', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: `
+        {
+          stopPlace(id: "NSR:StopPlace:42660") {
+            id
+            name
+            estimatedCalls(startTime:"2018-06-30T20:25:00+0200" timeRange: 7210000, numberOfDepartures: 10, omitNonBoarding:true) {     
+              realtime
+              aimedDepartureTime
+              expectedDepartureTime
+              forBoarding
+              destinationDisplay {
+                frontText
+              }
+              serviceJourney {
+                journeyPattern {
+                  line {
+                    publicCode
+                    operator {
+                      id
                     }
-                    notices {
-                        text
-                    }
-                    serviceJourney {
-                        journeyPattern {
-                            line {
-                                publicCode
-                                name
-                                transportMode
-                            }
-                        }
-                    }
+                    id
+                    name
+                    transportMode
+                  }
                 }
+              }
             }
-        }`
-    );
-
-    nextDepartures().then(function (response) {
-        console.log(response);
+          }
+        }
+        `}),
     })
+    .then(res => res.json())
+    .then(res => console.log(res.data));
 }
 
 
