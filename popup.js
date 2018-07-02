@@ -7,8 +7,7 @@ let closestRacks = [];
 let closestEverything = [];
 // Defines how many nearby stops to locate:
 const numberOfStops = 5;
-// Defines what kind of stations to locate, onstreetBus is only bus
-const mode = "onstreetBus";
+const enturendpoint = "https://api.entur.org/journeyplanner/2.0/index/graphql";
 
 
 // Executed when document is loaded
@@ -70,7 +69,7 @@ function getNearestStops() {
     let xhr = new XMLHttpRequest();
     xhr.open("GET", "https://api.entur.org/api/geocoder/1.1/reverse?point.lat=" +
         latitude + "&point.lon=" + longitude +
-        "&lang=en&size=" + numberOfStops + "&layers=venue&category=" + mode);
+        "&lang=en&size=" + numberOfStops + "&layers=venue");
     xhr.setRequestHeader("ET-Client-Name", "https://github.com/toretefre/catchbus");
     xhr.send();
     console.log("XMLHttpRequest to find the " + numberOfStops + " closest stops sent!");
@@ -88,16 +87,17 @@ function getNearestStops() {
 function parseStationData(jsonToParse) {
     let parsedJSON = JSON.parse(jsonToParse);
     console.log("Station JSON parsed! List of closest stations:");
-    for (let i = 0; i < numberOfStops; i++) {
+    for (let i = 0; i < parsedJSON["features"].length; i++) {
+        console.log(parsedJSON);
         let category = parsedJSON["features"][i]["properties"]["category"];
         let stopName = parsedJSON["features"][i]["properties"]["name"];
-        let stopID = parsedJSON["features"][i]["properties"]["id"];
+        let stopID = getStopID(parsedJSON["features"][i]["properties"]["id"]);
         let distance = parsedJSON["features"][i]["properties"]["distance"];
         let latitude = parsedJSON["features"][i]["geometry"]["coordinates"][1];
         let longitude = parsedJSON["features"][i]["geometry"]["coordinates"][0];
         let nextDepartures = getNextDepartures(stopID);
 
-        closestStops.push([category, stopName, stopID, distance, latitude, longitude]);
+        closestStops.push([category, stopName, stopID, distance, latitude, longitude, nextDepartures]);
     }
     console.log(closestStops);
 }
@@ -159,8 +159,8 @@ function parseCityBikeRacksTrondheim(jsonToParse) {
         let rackName = parsedJSON["data"]["stations"][i]["name"];
         let rackAddress = parsedJSON["data"]["stations"][i]["address"];
         let rackCapacity = parsedJSON["data"]["stations"][i]["capacity"];
-        let rackLat = parsedJSON["data"]["stations"][i]["lon"];
-        let rackLon = parsedJSON["data"]["stations"][i]["lat"];
+        let rackLat = parsedJSON["data"]["stations"][i]["lat"];
+        let rackLon = parsedJSON["data"]["stations"][i]["lon"];
 
         // -1 value is to be replaced with number of available bikes in rack
         closestRacks.push([rackID, rackName, rackAddress, rackCapacity, rackLat, rackLon, -1]);
@@ -216,8 +216,22 @@ function getMode(mode) {
             return "Buss";
         case "railStation":
             return "Tog";
+        case "metroStation":
+            return "Undergrunnsbane";
+        case "busStation":
+            return "Bussterminal";
+        case "coachStation":
+            return "Bussterminal";
+        case "tramStation":
+            return "Trikk";
+        case "harbourPort":
+            return "Båt";
+        case "ferryPort":
+            return "Ferje";
+        case "ferryStop":
+            return "Ferje";
         default:
-            return "Usikker";
+            return "Sære greier";
     }
 }
 
@@ -244,15 +258,18 @@ function getNextDepartures(stopID) {
     const startTime = year + "-" + month + "-" + day + "T" + hours + ":" + minutes + ":" + seconds + "+0200";
     console.log(startTime);
 
-    fetch('https://api.entur.org/journeyplanner/2.0/index/graphql', {
+    fetch(enturendpoint, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+            'Content-Type': 'application/json',
+            'ET-Client-Name': 'https://github.com/toretefre/catchbus'
+        },
         body: JSON.stringify({ query: `
         {
             stopPlace(id: "NSR:StopPlace:` + stopID + `") {
                 id
                 name
-                estimatedCalls(startTime:"` + startTime + `" timeRange: 7210000, numberOfDepartures: 10, omitNonBoarding:true) {
+                estimatedCalls(startTime:"` + startTime + `" timeRange: 86400, numberOfDepartures: 10, omitNonBoarding:true) {
                     realtime
                     aimedDepartureTime
                     expectedDepartureTime
