@@ -6,7 +6,6 @@ let closestStops = [];
 // Array containing closest city bike racks
 let closestRacks = [];
 // Defines how many nearby stops to locate:
-let closestEverything = [];
 const numberOfStops = 5;
 const enturendpoint = "https://api.entur.org/journeyplanner/2.0/index/graphql";
 
@@ -58,7 +57,6 @@ function getNearestStops() {
     xhr.onreadystatechange = function () {
         if (xhr.readyState === 4 && xhr.status === 200) {
             parseStationData(xhr.response);
-            display(closestStops);
         }
     }
 }
@@ -71,7 +69,7 @@ function parseStationData(jsonToParse) {
         let category = parsedJSON["features"][i]["properties"]["category"];
         let stopName = parsedJSON["features"][i]["properties"]["name"];
         let stopID = getStopID(parsedJSON["features"][i]["properties"]["id"]);
-        let distance = parsedJSON["features"][i]["properties"]["distance"];
+        let distance = (parsedJSON["features"][i]["properties"]["distance"])*1000;
         let latitude = parsedJSON["features"][i]["geometry"]["coordinates"][1];
         let longitude = parsedJSON["features"][i]["geometry"]["coordinates"][0];
         let nextDepartures = getNextDepartures(stopID);
@@ -79,6 +77,7 @@ function parseStationData(jsonToParse) {
         closestStops.push([category, stopName, stopID, distance, latitude, longitude, nextDepartures]);
     }
     console.log(closestStops);
+    display(closestStops, closestRacks);
 }
 
 
@@ -136,7 +135,7 @@ function parseCityBikeRacksTrondheim(jsonToParse) {
         let rackCapacity = parsedJSON["data"]["stations"][i]["capacity"];
         let rackLat = parsedJSON["data"]["stations"][i]["lat"];
         let rackLon = parsedJSON["data"]["stations"][i]["lon"];
-        let distance = getDistanceBetweenCoords(rackLat, rackLon, localStorage.getItem("latitude"), localStorage.getItem("longitude"));
+        let distance = parseInt(getDistanceBetweenCoords(rackLat, rackLon, localStorage.getItem("latitude"), localStorage.getItem("longitude")));
         // -1 value is to be replaced with number of available bikes in rack
         closestRacks.push([rackID, rackName, rackAddress, distance, rackCapacity, rackLat, rackLon, -1]);
     }
@@ -188,6 +187,9 @@ function getDistanceBetweenCoords(lat1, lon1, lat2, lon2) {
 
 // Translates digit representation into form of transportation
 function getMode(mode) {
+    if (Number.isInteger(mode)) {
+        return "Bysykkel";
+    }
     mode += "";
     switch (mode) {
         case "onstreetBus":
@@ -278,27 +280,18 @@ function getNextDepartures(stopID) {
     .then(res => console.log(res.data));
 }
 
-// Takes in all stops and racks and sorts by distance
-function mergePublicAndBikes(stopList, rackList) {
-    for (i = 0; i < stopList.length; i++) {
-        closestEverything += stopList[i];
-    }
-    for (i = 0; i < rackList.length; i++) {
-        closestEverything += rackList[i];
-    }
-    closestEverything.sort((a, b) => a - b);
-    return closestEverything;
-}
-
 
 // Changes the HTML when data is sorted and ready
-function display(closestStops) {
+function display(closestStops, closestRacks) {
+    let closest = closestStops.concat(closestRacks);
+    console.log("Liste som skal displayast:");
+    console.log(closest);
     let stopsTable = "<table><th>Haldeplass</th><th>Transportmiddel</th><th>Avstand</th>";
-    for (let i = 0; i < closestStops.length; i++) {
+    for (let i = 0; i < closest.length; i++) {
         stopsTable +=
-            "<tr><td>" + getStationName(closestStops[i][1]) +
-            "</td><td>" + getMode(closestStops[i][0]) +
-            "</td><td>" + getDistance(closestStops[i][3]) + "</td></tr>";
+            "<tr><td>" + getStationName(closest[i][1]) +
+            "</td><td>" + getMode(closest[i][0]) +
+            "</td><td>" + getDistance(closest[i][3]) + "</td></tr>";
     }
     resultText.innerHTML = stopsTable;
     console.log("finished!");
@@ -317,5 +310,5 @@ function getStopID(IdString) {
 
 
 function getDistance(distance) {
-    return (distance * 1000 + " meter");
+    return distance + " meter";
 }
