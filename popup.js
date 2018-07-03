@@ -109,7 +109,7 @@ function getAllCityBikesTrondheim() {
     }
 }
 
-
+// Gets availability of city bikes
 function getCityBikeStatusTrondheim() {
     console.log("getCityBikeStatusTrondheim called!");
     let xhr = new XMLHttpRequest();
@@ -123,7 +123,7 @@ function getCityBikeStatusTrondheim() {
     }
 }
 
-
+// parses city bike status
 function parseCityBikeStatusTrondheim(jsonToParse) {
     let parsedJSON = JSON.parse(jsonToParse);
     console.log("System status JSON parsed! Updating rack list");
@@ -139,7 +139,7 @@ function parseCityBikeStatusTrondheim(jsonToParse) {
 }
 
 
-// Parses received JSON from Trondheim City Bikes
+// Parses received JSON about city bike racks
 function parseCityBikeRacksTrondheim(jsonToParse) {
     let parsedJSON = JSON.parse(jsonToParse);
     console.log("Rack JSON parsed! List of closest racks:");
