@@ -5,9 +5,8 @@ const resultText = document.getElementById("resultText");
 let closestStops = [];
 // Array containing closest city bike racks
 let closestRacks = [];
-// Array containing all elements to be display
-let closestEverything = [];
 // Defines how many nearby stops to locate:
+let closestEverything = [];
 const numberOfStops = 5;
 const enturendpoint = "https://api.entur.org/journeyplanner/2.0/index/graphql";
 
@@ -16,7 +15,6 @@ const enturendpoint = "https://api.entur.org/journeyplanner/2.0/index/graphql";
 $(document).ready(function () {
     console.log("Document loaded, asking for Geolocation!");
     getPosition();
-    getAllCityBikesTrondheim();
 });
 
 
@@ -42,20 +40,7 @@ function savePosition(position) {
     localStorage.setItem("latitude", lat);
     localStorage.setItem("longitude", lon);
     getNearestStops();
-}
-
-
-// Changes the HTML when data is ready
-function showLocation(closestStops) {
-    let stopsTable = "<table><th>Haldeplass</th><th>Transportmiddel</th><th>Avstand</th>";
-    for (let i = 0; i < closestStops.length; i++) {
-        stopsTable +=
-            "<tr><td>" + getStationName(closestStops[i][1]) +
-            "</td><td>" + getMode(closestStops[i][0]) +
-            "</td><td>" + getDistance(closestStops[i][3]) + "</td></tr>";
-    }
-    resultText.innerHTML = stopsTable;
-    console.log("finished!");
+    getAllCityBikesTrondheim();
 }
 
 
@@ -73,7 +58,7 @@ function getNearestStops() {
     xhr.onreadystatechange = function () {
         if (xhr.readyState === 4 && xhr.status === 200) {
             parseStationData(xhr.response);
-            showLocation(closestStops);
+            display(closestStops);
         }
     }
 }
@@ -151,9 +136,9 @@ function parseCityBikeRacksTrondheim(jsonToParse) {
         let rackCapacity = parsedJSON["data"]["stations"][i]["capacity"];
         let rackLat = parsedJSON["data"]["stations"][i]["lat"];
         let rackLon = parsedJSON["data"]["stations"][i]["lon"];
-
+        let distance = getDistanceBetweenCoords(rackLat, rackLon, localStorage.getItem("latitude"), localStorage.getItem("longitude"));
         // -1 value is to be replaced with number of available bikes in rack
-        closestRacks.push([rackID, rackName, rackAddress, rackCapacity, rackLat, rackLon, -1]);
+        closestRacks.push([rackID, rackName, rackAddress, distance, rackCapacity, rackLat, rackLon, -1]);
     }
     console.log(closestRacks);
 }
@@ -182,19 +167,22 @@ function timeUntilDeparture(departureTime, now) {
 }
 
 // Used to calculate distance to nearest city bikes
-function distanceInMetersBetweenCoordinates(lat1, lon1, lat2, lon2) {
-  const earthRadiusKm = 6371;
+function getDistanceBetweenCoords(lat1, lon1, lat2, lon2) {
+    const earthRadiusKm = 6371;
 
-  let dLat = degreesToRadians(lat2 - lat1);
-  let dLon = degreesToRadians(lon2 - lon1);
+    function degreesToRadians(degrees) {
+        return degrees * Math.PI / 180;
+    }
+    let dLat = degreesToRadians(lat2 - lat1);
+    let dLon = degreesToRadians(lon2 - lon1);
 
-  lat1 = degreesToRadians(lat1);
-  lat2 = degreesToRadians(lat2);
+    lat1 = degreesToRadians(lat1);
+    lat2 = degreesToRadians(lat2);
 
-  let a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-          Math.sin(dLon/2) * Math.sin(dLon/2) * Math.cos(lat1) * Math.cos(lat2);
-  let c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-  return (earthRadiusKm * c) * 1000;
+    let a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+            Math.sin(dLon/2) * Math.sin(dLon/2) * Math.cos(lat1) * Math.cos(lat2);
+    let c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return ((earthRadiusKm * c) * 1000).toFixed(0);
 }
 
 
@@ -290,12 +278,39 @@ function getNextDepartures(stopID) {
     .then(res => console.log(res.data));
 }
 
+// Takes in all stops and racks and sorts by distance
+function mergePublicAndBikes(stopList, rackList) {
+    for (i = 0; i < stopList.length; i++) {
+        closestEverything += stopList[i];
+    }
+    for (i = 0; i < rackList.length; i++) {
+        closestEverything += rackList[i];
+    }
+    closestEverything.sort((a, b) => a - b);
+    return closestEverything;
+}
+
+
+// Changes the HTML when data is sorted and ready
+function display(closestStops) {
+    let stopsTable = "<table><th>Haldeplass</th><th>Transportmiddel</th><th>Avstand</th>";
+    for (let i = 0; i < closestStops.length; i++) {
+        stopsTable +=
+            "<tr><td>" + getStationName(closestStops[i][1]) +
+            "</td><td>" + getMode(closestStops[i][0]) +
+            "</td><td>" + getDistance(closestStops[i][3]) + "</td></tr>";
+    }
+    resultText.innerHTML = stopsTable;
+    console.log("finished!");
+}
+
 
 function getStationName(station) {
     return station;
 }
 
 
+// Removes NSR:StopID:
 function getStopID(IdString) {
     return (IdString.slice(14));
 }
