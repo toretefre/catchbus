@@ -248,7 +248,6 @@ function getNextDepartures(stopID) {
     const year = now.getFullYear();
 
     const startTime = year + "-" + month + "-" + day + "T" + hours + ":" + minutes + ":" + seconds + "+0200";
-    console.log(startTime);
 
     fetch(enturendpoint, {
         method: 'POST',
