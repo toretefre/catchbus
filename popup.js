@@ -146,18 +146,20 @@ function display(closestStops, closestRacks) {
     mergeCityBikeStatusAndInformation(closest, cityBikeRackStatusTrondheim);
     console.log("Liste som skal displayast:");
     console.log(closest);
-    let stopsTable = "<table><th>-</th> <th></th> <th></th> ";
+    let stopsTable = "<table><th></th> <th></th> <th></th> ";
     for (let i = 0; i < closest.length; i++) {
         stopsTable += "<tr>";
         if (closest[i][0] === parseInt(closest[i][0], 10)) {
-            stopsTable += "</tr><tr><td>" + getStationName(closest[i][1]) + "</td><td>" + getMode(closest[i][0]) + "</td><td>Ledige syklar</td></tr>" +
+            stopsTable +=
+                "</tr><tr><td>" + getStationName(closest[i][1]) + "</td><td>" + getMode(closest[i][0]) + "</td><td>Ledige syklar</td></tr>" +
                 "<tr><td>" + getDistance(closest[i][3]) + "</td><td></td><td>" + closest[i][7] + "</td></tr>";
         }
         else {
-            stopsTable += "</tr><tr><td>" + getStationName(closest[i][1]) + "</td><td>" + getMode(closest[i][0]) + "</td><td>Neste avgang</td></tr>" +
+            stopsTable +=
+                "</tr><tr><td>" + getStationName(closest[i][1]) + "</td><td>" + getMode(closest[i][0]) + "</td><td>Neste avgang</td></tr>" +
                 "<tr><td>" + getDistance(closest[i][3]) + "</td><td></td><td>" + "dunno" + "</td></tr>";
         }
-        stopsTable += "</tr><tr><td>-</td></tr>";
+        stopsTable += "</tr><tr><td>_</td></tr>";
     }
     resultText.innerHTML = stopsTable;
 
