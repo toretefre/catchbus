@@ -70,7 +70,7 @@ function parseStationData(jsonToParse) {
         let category = parsedJSON["features"][i]["properties"]["category"];
         // Multimodal stops
         if (parsedJSON["features"][i]["properties"]["category"].length > 1) {
-            category = "multimodal"
+            category = "multimodal";
         }
         let stopName = parsedJSON["features"][i]["properties"]["name"];
         let stopID = getStopID(parsedJSON["features"][i]["properties"]["id"]);
