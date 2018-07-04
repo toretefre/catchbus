@@ -98,7 +98,7 @@ function parseStationData(jsonToParse) {
         closestStops.push([category, stopName, stopID, distance, latitude, longitude, nextDepartures]);
     }
     console.log(closestStops);
-    display(closestStops, cityBikeRacksTrondheim);
+    mergeStopsAndRacks(closestStops, cityBikeRacksTrondheim);
 }
 
 
@@ -122,11 +122,12 @@ function parseCityBikeRacksTrondheim(jsonToParse) {
 }
 
 
-// Changes the HTML when data is sorted and ready
-function display(closestStops, closestRacks) {
+// Preparing display
+function mergeStopsAndRacks(closestStops, closestRacks) {
     let closest = closestStops.concat(closestRacks);
     // Sorts ascending based on distance from user
     closest.sort((a, b) => (a[3] - b[3]));
+
     // Removes things further away than const maxDistanceinMeters
     for (let i = 0; i < closest.length; i++) {
         if (closest[i][3] > maxDistanceinMeters) {
@@ -135,6 +136,7 @@ function display(closestStops, closestRacks) {
         }
         closest.splice(numberOfStops);
     }
+
     for (let i = 0; i < closest.length; i++) {
         // If integer, which means city bike rack
         if (closest[i][0] === parseInt(closest[i][0], 10)) {
@@ -143,21 +145,30 @@ function display(closestStops, closestRacks) {
         // Else, which means random public transport station
         getNextDepartureForStop(closest[i][2]);
     }
+
     mergeCityBikeStatusAndInformation(closest, cityBikeRackStatusTrondheim);
     console.log("Liste som skal displayast:");
     console.log(closest);
+
+    changeHTML(closest);
+}
+
+// Changes the HTML when all data is ready
+function changeHTML(listToDisplay) {
     let stopsTable = "<table><th></th> <th></th> <th></th> ";
-    for (let i = 0; i < closest.length; i++) {
+    for (let i = 0; i < listToDisplay.length; i++) {
         stopsTable += "<tr>";
-        if (closest[i][0] === parseInt(closest[i][0], 10)) {
+        // If city bike rack
+        if (listToDisplay[i][0] === parseInt(listToDisplay[i][0], 10)) {
             stopsTable +=
-                "</tr><tr><td>" + getStationName(closest[i][1]) + "</td><td>" + getMode(closest[i][0]) + "</td><td>Ledige syklar</td></tr>" +
-                "<tr><td>" + getDistance(closest[i][3]) + "</td><td></td><td>" + closest[i][7] + "</td></tr>";
+                "</tr><tr><td>" + getStationName(listToDisplay[i][1]) + "</td><td>" + getMode(listToDisplay[i][0]) + "</td><td>Ledige syklar</td></tr>" +
+                "<tr><td>" + getDistance(listToDisplay[i][3]) + "</td><td></td><td>" + listToDisplay[i][7] + "</td></tr>";
         }
+        // If public transport station
         else {
             stopsTable +=
-                "</tr><tr><td>" + getStationName(closest[i][1]) + "</td><td>" + getMode(closest[i][0]) + "</td><td>Neste avgang</td></tr>" +
-                "<tr><td>" + getDistance(closest[i][3]) + "</td><td></td><td>" + "dunno" + "</td></tr>";
+                "</tr><tr><td>" + getStationName(listToDisplay[i][1]) + "</td><td>" + getMode(listToDisplay[i][0]) + "</td><td>Neste avgang</td></tr>" +
+                "<tr><td>" + getDistance(listToDisplay[i][3]) + "</td><td></td><td>" + "dunno" + "</td></tr>";
         }
         stopsTable += "</tr><tr><td>_</td></tr>";
     }
@@ -165,7 +176,6 @@ function display(closestStops, closestRacks) {
 
     console.log("Displaying finished!");
 }
-
 
 // Gets availability of city bikes
 function getCityBikeStatusTrondheim() {
@@ -217,27 +227,8 @@ function mergeCityBikeStatusAndInformation(displayArray, statusArray) {
 }
 
 
-// Used to calculate distance to nearest city bikes
-function getDistanceBetweenCoords(lat1, lon1, lat2, lon2) {
-    const earthRadiusKm = 6371;
-
-    function degreesToRadians(degrees) {
-        return degrees * Math.PI / 180;
-    }
-    let dLat = degreesToRadians(lat2 - lat1);
-    let dLon = degreesToRadians(lon2 - lon1);
-
-    lat1 = degreesToRadians(lat1);
-    lat2 = degreesToRadians(lat2);
-
-    let a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-            Math.sin(dLon/2) * Math.sin(dLon/2) * Math.cos(lat1) * Math.cos(lat2);
-    let c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    return ((earthRadiusKm * c) * 1000).toFixed(0);
-}
-
-
-function getNextDepartures(stopID) {
+// Fetches next departure from GraphQL entur API
+function getNextDepartureForStop(stopID) {
     // ensures right format before calling API
     function addZero(i) {
         if (i < 10) {
@@ -299,9 +290,22 @@ function getNextDepartures(stopID) {
         `}),
     })
     .then(res => res.json())
-    .then(res => console.log(res.data));
+    .then(res => updateNextDepartures(res.data))
 }
 
+
+// Inserts next departures into Stop array
+function updateNextDepartures(data) {
+    for (let i = 0; i < closestStops.length; i++) {
+        const stopIDfromData = getStopID(data["stopPlace"]["id"]);
+        const stopIDfromArray = closestStops[i][2];
+        // Inserts next departures if stopIDs match
+        if (stopIDfromData === stopIDfromArray) {
+            closestStops[i][6] = data["stopPlace"]["estimatedCalls"];
+        }
+    }
+    console.log(closestStops);
+}
 
 // Translates keyword into form of transportation
 function getMode(mode) {
@@ -316,7 +320,7 @@ function getMode(mode) {
         case "railStation":
             return "Tog";
         case "metroStation":
-            return "Undergrunnsbane";
+            return "T-bane";
         case "busStation":
             return "Bussterminal";
         case "coachStation":
@@ -366,12 +370,6 @@ function timeUntilDeparture(departureTime, now) {
 }
 
 
-function getNextDepartureForStop(stopID) {
-    console.log("Departure asked for stopID: " + stopID);
-    return -1;
-}
-
-
 function getStationName(station) {
     return station;
 }
@@ -385,4 +383,24 @@ function getStopID(IdString) {
 
 function getDistance(distance) {
     return distance + " meter";
+}
+
+
+// Used to calculate distance to nearest city bikes
+function getDistanceBetweenCoords(lat1, lon1, lat2, lon2) {
+    const earthRadiusKm = 6371;
+
+    function degreesToRadians(degrees) {
+        return degrees * Math.PI / 180;
+    }
+    let dLat = degreesToRadians(lat2 - lat1);
+    let dLon = degreesToRadians(lon2 - lon1);
+
+    lat1 = degreesToRadians(lat1);
+    lat2 = degreesToRadians(lat2);
+
+    let a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+            Math.sin(dLon/2) * Math.sin(dLon/2) * Math.cos(lat1) * Math.cos(lat2);
+    let c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return ((earthRadiusKm * c) * 1000).toFixed(0);
 }
