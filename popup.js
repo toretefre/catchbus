@@ -10,8 +10,7 @@ const numberOfStops = 5;
 const enturendpoint = "https://api.entur.org/journeyplanner/2.0/index/graphql";
 
 
-// Executed when document is loaded
-$(document).ready(function () {
+window.addEventListener('load', function() {
     console.log("Document loaded, asking for Geolocation!");
     getPosition();
 });
