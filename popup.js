@@ -13,6 +13,7 @@ const maxDistanceinMeters = 1000;
 const enturendpoint = "https://api.entur.org/journeyplanner/2.0/index/graphql";
 
 
+// When page is loaded
 window.addEventListener('load', function() {
     console.log("Document loaded, starting...");
     getPosition();
@@ -50,7 +51,7 @@ function savePosition(position) {
 function getNearestStops() {
     const latitude = localStorage.getItem("latitude");
     const longitude = localStorage.getItem("longitude");
-    console.log("getNearestStops called with coords " + latitude + ", " + longitude);
+    console.log("Position: " + latitude + ", " + longitude);
     let xhr = new XMLHttpRequest();
     xhr.open("GET", "https://api.entur.org/api/geocoder/1.1/reverse?point.lat=" +
         latitude + "&point.lon=" + longitude +
@@ -94,9 +95,10 @@ function parseStationData(jsonToParse) {
         let latitude = parsedJSON["features"][i]["geometry"]["coordinates"][1];
         let longitude = parsedJSON["features"][i]["geometry"]["coordinates"][0];
         let nextDepartures = -1;
-
         closestStops.push([category, stopName, stopID, distance, latitude, longitude, nextDepartures]);
+        getNextDepartureForStop(stopID);
     }
+    console.log("Public transport stations:");
     console.log(closestStops);
     mergeStopsAndRacks(closestStops, cityBikeRacksTrondheim);
 }
@@ -105,7 +107,7 @@ function parseStationData(jsonToParse) {
 // Parses received JSON about city bike racks
 function parseCityBikeRacksTrondheim(jsonToParse) {
     let parsedJSON = JSON.parse(jsonToParse);
-    console.log("Rack JSON parsed! List of closest racks:");
+    console.log("Trondheim City Bike racks:");
     const numberOfRacks = parsedJSON["data"]["stations"].length;
     for (let i = 0; i < numberOfRacks; i++) {
         let rackID = parsedJSON["data"]["stations"][i]["station_id"];
@@ -137,24 +139,14 @@ function mergeStopsAndRacks(closestStops, closestRacks) {
         closest.splice(numberOfStops);
     }
 
-    for (let i = 0; i < closest.length; i++) {
-        // If integer, which means city bike rack
-        if (closest[i][0] === parseInt(closest[i][0], 10)) {
-            continue;
-        }
-        // Else, which means random public transport station
-        getNextDepartureForStop(closest[i][2]);
-    }
-
     mergeCityBikeStatusAndInformation(closest, cityBikeRackStatusTrondheim);
-    console.log("Liste som skal displayast:");
-    console.log(closest);
-
     changeHTML(closest);
 }
 
 // Changes the HTML when all data is ready
 function changeHTML(listToDisplay) {
+    console.log("Final list:");
+    console.log(listToDisplay);
     let stopsTable = "<table><th></th> <th></th> <th></th> ";
     for (let i = 0; i < listToDisplay.length; i++) {
         stopsTable += "<tr>";
@@ -169,6 +161,9 @@ function changeHTML(listToDisplay) {
             stopsTable +=
                 "</tr><tr><td>" + getStationName(listToDisplay[i][1]) + "</td><td>" + getMode(listToDisplay[i][0]) + "</td><td>Neste avgang</td></tr>" +
                 "<tr><td>" + getDistance(listToDisplay[i][3]) + "</td><td></td><td>" + "dunno" + "</td></tr>";
+            for (let m = 0; m < listToDisplay[m][6].length; m++) {
+                console.log(listToDisplay[m][6]);
+            }
         }
         stopsTable += "</tr><tr><td>_</td></tr>";
     }
@@ -189,10 +184,11 @@ function getCityBikeStatusTrondheim() {
     }
 }
 
+
 // Parses city bike status
 function parseCityBikeStatusTrondheim(jsonToParse) {
     let parsedJSON = JSON.parse(jsonToParse);
-    console.log("System status JSON parsed! Updating rack list");
+    // console.log("System status JSON parsed! Updating rack list");
     const numberOfRacks = parsedJSON["data"]["stations"].length;
     for (let i = 0; i < numberOfRacks; i++) {
         let rackID = parsedJSON["data"]["stations"][i]["station_id"];
@@ -304,8 +300,9 @@ function updateNextDepartures(data) {
             closestStops[i][6] = data["stopPlace"]["estimatedCalls"];
         }
     }
-    console.log(closestStops);
+    //console.log(closestStops);
 }
+
 
 // Translates keyword into form of transportation
 function getMode(mode) {
