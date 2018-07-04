@@ -3,8 +3,10 @@ const now = new Date();
 const resultText = document.getElementById("resultText");
 // Array containing closest public transport stations
 let closestStops = [];
-// Array containing closest city bike racks
-let closestRacks = [];
+// Array containing closest Trondheim City Bike racks
+let cityBikeRacksTrondheim = [];
+// Array containing status of Trondheim City Bike racks
+let cityBikeRackStatusTrondheim = [];
 // Defines how many nearby stops to locate:
 const numberOfStops = 5;
 const maxDistanceinMeters = 1000;
@@ -14,6 +16,7 @@ const enturendpoint = "https://api.entur.org/journeyplanner/2.0/index/graphql";
 window.addEventListener('load', function() {
     console.log("Document loaded, asking for Geolocation!");
     getPosition();
+    getCityBikeStatusTrondheim();
 });
 
 
@@ -24,7 +27,7 @@ function getPosition() {
     }
     else {
         setTimeout(function(){
-            console.log("Geolocation failed / not supported, redirecting!");
+            console.log("Geolocation failed, redirecting!");
             resultText.innerHTML = "Vi klarar ikkje hente posisjonen din, sender deg til en-tur.no";
         }, 4000);
         window.location.replace("https://en-tur.no");
@@ -39,7 +42,7 @@ function savePosition(position) {
     localStorage.setItem("latitude", lat);
     localStorage.setItem("longitude", lon);
     getNearestStops();
-    getAllCityBikesTrondheim();
+    getCityBikeRacksTrondheim();
 }
 
 
@@ -62,6 +65,19 @@ function getNearestStops() {
 }
 
 
+// Connects with Trondheim City Bikes API to fetch all city bike racks
+function getCityBikeRacksTrondheim() {
+    let xhr = new XMLHttpRequest();
+    xhr.open("GET", "http://gbfs.urbansharing.com/trondheim/station_information.json");
+    xhr.send();
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4 && xhr.status === 200) {
+            parseCityBikeRacksTrondheim(xhr.response);
+        }
+    }
+}
+
+
 // Parses JSON station data received from Entur into Javascript objects
 function parseStationData(jsonToParse) {
     let parsedJSON = JSON.parse(jsonToParse);
@@ -77,54 +93,12 @@ function parseStationData(jsonToParse) {
         let distance = (parsedJSON["features"][i]["properties"]["distance"])*1000;
         let latitude = parsedJSON["features"][i]["geometry"]["coordinates"][1];
         let longitude = parsedJSON["features"][i]["geometry"]["coordinates"][0];
-        let nextDepartures = getNextDepartures(stopID);
+        let nextDepartures = -1;
 
         closestStops.push([category, stopName, stopID, distance, latitude, longitude, nextDepartures]);
     }
     console.log(closestStops);
-    display(closestStops, closestRacks);
-}
-
-
-// Connects with Trondheim City Bikes API to fetch all city bike racks
-function getAllCityBikesTrondheim() {
-    let xhr = new XMLHttpRequest();
-    xhr.open("GET", "http://gbfs.urbansharing.com/trondheim/station_information.json");
-    xhr.send();
-    xhr.onreadystatechange = function () {
-        if (xhr.readyState === 4 && xhr.status === 200) {
-            parseCityBikeRacksTrondheim(xhr.response);
-        }
-    }
-}
-
-// Gets availability of city bikes
-function getCityBikeStatusTrondheim() {
-    console.log("getCityBikeStatusTrondheim called!");
-    let xhr = new XMLHttpRequest();
-    xhr.open("GET", "http://gbfs.urbansharing.com/trondheim/station_status.json");
-    xhr.send();
-    console.log("Requested system status Trondheim City Bikes!");
-    xhr.onreadystatechange = function () {
-        if (xhr.readyState === 4 && xhr.status === 200) {
-            parseCityBikeStatusTrondheim(xhr.response);
-        }
-    }
-}
-
-// parses city bike status
-function parseCityBikeStatusTrondheim(jsonToParse) {
-    let parsedJSON = JSON.parse(jsonToParse);
-    console.log("System status JSON parsed! Updating rack list");
-    const numberOfRacks = parsedJSON["data"]["stations"].length;
-    for (let i = 0; i < numberOfRacks; i++) {
-        let rackID = parsedJSON["data"]["stations"][i]["station_id"];
-        let bikes = parsedJSON["data"]["stations"][i]["num_bikes_available"];
-        let freeDocks = parsedJSON["data"]["stations"][i]["num_docks_available"];
-        let open = parsedJSON["data"]["stations"][i]["is_renting"];
-
-        closestRacks.push([rackID, bikes, freeDocks, open]);
-    }
+    display(closestStops, cityBikeRacksTrondheim);
 }
 
 
@@ -141,34 +115,102 @@ function parseCityBikeRacksTrondheim(jsonToParse) {
         let rackLat = parsedJSON["data"]["stations"][i]["lat"];
         let rackLon = parsedJSON["data"]["stations"][i]["lon"];
         let distance = parseInt(getDistanceBetweenCoords(rackLat, rackLon, localStorage.getItem("latitude"), localStorage.getItem("longitude")));
-        // -1 value is to be replaced with number of available bikes in rack
-        closestRacks.push([rackID, rackName, rackAddress, distance, rackCapacity, rackLat, rackLon, -1]);
+        // -1 value is to be replaced with number of available bikes, available docks, and opening status(0 or 1)
+        cityBikeRacksTrondheim.push([rackID, rackName, rackAddress, distance, rackCapacity, rackLat, rackLon, -1, -1, -1]);
     }
-    console.log(closestRacks);
+    console.log(cityBikeRacksTrondheim);
 }
 
 
-// Translates minutes until departure to readable text
-function timeUntilDeparture(departureTime, now) {
-    let minutesUntil = (departureTime.getTime() - now.getTime()) / 60000;
+// Changes the HTML when data is sorted and ready
+function display(closestStops, closestRacks) {
+    let closest = closestStops.concat(closestRacks);
+    // Sorts ascending based on distance from user
+    closest.sort((a, b) => (a[3] - b[3]));
+    // Removes things further away than const maxDistanceinMeters
+    for (let i = 0; i < closest.length; i++) {
+        if (closest[i][3] > maxDistanceinMeters) {
+            closest.splice(i);
+            break;
+        }
+        closest.splice(numberOfStops);
+    }
+    for (let i = 0; i < closest.length; i++) {
+        // If integer, which means city bike rack
+        if (closest[i][0] === parseInt(closest[i][0], 10)) {
+            getAvailabilityForCityBikeRack(closest[i][0]);
+            continue;
+        }
+        // Else, which means random public transport station
+        getNextDepartureForStop(closest[i][2]);
+    }
+    mergeCityBikeStatusAndInformation(closest, cityBikeRackStatusTrondheim);
+    console.log("Liste som skal displayast:");
+    console.log(closest);
+    let stopsTable = "<table><th>Haldeplass</th><th>Transportmiddel</th><th>Avstand</th>";
+    for (let i = 0; i < closest.length; i++) {
+        stopsTable +=
+            "<tr><td>" + getStationName(closest[i][1]) +
+            "</td><td>" + getMode(closest[i][0]) +
+            "</td><td>" + getDistance(closest[i][3]) + "</td></tr>";
+    }
+    resultText.innerHTML = stopsTable;
 
-    switch (minutesUntil) {
-        case 0:
-            return "er rett rundt hjørnet!";
-        case 1:
-            return "kjem om ett minutt.";
-        case 2:
-            return "kjem om to minutt.";
-        case 3:
-            return "kjem om tre minutt.";
-        case 4:
-            return "kjem om fire minutt.";
-        case 5:
-            return "kjem om fem minutt.";
-        default:
-            return "kjem " + departureTime;
+    console.log("Displaying finished!");
+}
+
+
+// Gets availability of city bikes
+function getCityBikeStatusTrondheim() {
+    console.log("getCityBikeStatusTrondheim called!");
+    let xhr = new XMLHttpRequest();
+    xhr.open("GET", "http://gbfs.urbansharing.com/trondheim/station_status.json");
+    xhr.send();
+    console.log("Requested system status Trondheim City Bikes!");
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4 && xhr.status === 200) {
+            parseCityBikeStatusTrondheim(xhr.response);
+        }
     }
 }
+
+// Parses city bike status
+function parseCityBikeStatusTrondheim(jsonToParse) {
+    let parsedJSON = JSON.parse(jsonToParse);
+    console.log("System status JSON parsed! Updating rack list");
+    const numberOfRacks = parsedJSON["data"]["stations"].length;
+    for (let i = 0; i < numberOfRacks; i++) {
+        let rackID = parsedJSON["data"]["stations"][i]["station_id"];
+        let bikes = parsedJSON["data"]["stations"][i]["num_bikes_available"];
+        let freeDocks = parsedJSON["data"]["stations"][i]["num_docks_available"];
+        let open = parsedJSON["data"]["stations"][i]["is_renting"];
+
+        cityBikeRackStatusTrondheim.push([rackID, bikes, freeDocks, open]);
+    }
+}
+
+
+function mergeCityBikeStatusAndInformation(displayArray, statusArray) {
+    for (let i = 0; i < displayArray.length; i++) {
+        // Checks if city bike rack and not public transport
+        if (displayArray[i][0] === parseInt(displayArray[i][0], 10)) {
+            // Compares rackID in the two Arrays
+            for (let k = 0; k < statusArray.length; k++) {
+                // Found matching rackID
+                if (displayArray[i][0] === statusArray[k][0]) {
+                    // Replacing available bikes
+                    displayArray[i][7] = statusArray[k][1];
+                    // Replacing available docks
+                    displayArray[i][8] = statusArray[k][2];
+                    // Replacing open status, 0 or 1
+                    displayArray[i][9] = statusArray[k][3];
+                    break;
+                }
+            }
+        }
+    }
+}
+
 
 // Used to calculate distance to nearest city bikes
 function getDistanceBetweenCoords(lat1, lon1, lat2, lon2) {
@@ -190,47 +232,8 @@ function getDistanceBetweenCoords(lat1, lon1, lat2, lon2) {
 }
 
 
-// Translates digit representation into form of transportation
-function getMode(mode) {
-    // City bike racks are recognized by ID
-    if (Number.isInteger(mode)) {
-        return "Bysykkel";
-    }
-    mode += "";
-    switch (mode) {
-        case "onstreetBus":
-            return "Buss";
-        case "railStation":
-            return "Tog";
-        case "metroStation":
-            return "Undergrunnsbane";
-        case "busStation":
-            return "Bussterminal";
-        case "coachStation":
-            return "Bussterminal";
-        case "onstreetTram":
-            return "Trikk";
-        case "tramStation":
-            return "Trikk";
-        case "harbourPort":
-            return "Båt";
-        case "ferryPort":
-            return "Ferje";
-        case "ferryStop":
-            return "Ferje";
-        case "lift":
-            return "Heis";
-        case "airport":
-            return "Flyplass";
-        case "multimodal":
-            return "Knutepunkt";
-        default:
-            return "Anna";
-    }
-}
-
-
 function getNextDepartures(stopID) {
+    // ensures right format before calling API
     function addZero(i) {
         if (i < 10) {
             i = "0" + i;
@@ -238,6 +241,7 @@ function getNextDepartures(stopID) {
         return i;
     }
 
+    // 0-11 indexed months
     function correctMonth(i) {
         return i+1;
     }
@@ -251,6 +255,7 @@ function getNextDepartures(stopID) {
 
     const startTime = year + "-" + month + "-" + day + "T" + hours + ":" + minutes + ":" + seconds + "+0200";
 
+    // Sending graphQL request
     fetch(enturendpoint, {
         method: 'POST',
         headers: {
@@ -293,39 +298,66 @@ function getNextDepartures(stopID) {
 }
 
 
-// Changes the HTML when data is sorted and ready
-function display(closestStops, closestRacks) {
-    let closest = closestStops.concat(closestRacks);
-    // Sorts ascending based on distance from user
-    closest.sort((a, b) => (a[3] - b[3]));
-    // Removes things further away than const maxDistanceinMeters
-    for (let i = 0; i < closest.length; i++) {
-        if (closest[i][3] > maxDistanceinMeters) {
-            closest.splice(i);
-            break;
-        }
-        closest.splice(numberOfStops);
+// Translates keyword into form of transportation
+function getMode(mode) {
+    // City bike racks are recognized by ID
+    if (Number.isInteger(mode)) {
+        return "Bysykkel";
     }
-    console.log("Liste som skal displayast:");
-    console.log(closest);
-    for (let i = 0; i < closest.length; i++) {
-        // If integer, which means city bike rack
-        if (closest[i][0] === parseInt(closest[i][0], 10)) {
-            getAvailabilityForCityBikeRack(closest[i][0]);
-            continue;
-        }
-        // Else, which means random public transport station
-        getNextDepartureForStop(closest[i][2]);
+    mode += "";
+    switch (mode) {
+        case "onstreetBus":
+            return "Buss";
+        case "railStation":
+            return "Tog";
+        case "metroStation":
+            return "Undergrunnsbane";
+        case "busStation":
+            return "Bussterminal";
+        case "coachStation":
+            return "Bussterminal";
+        case "onstreetTram":
+            return "Trikk";
+        case "tramStation":
+            return "Trikk";
+        case "harbourPort":
+            return "Båt";
+        case "ferryPort":
+            return "Ferje";
+        case "ferryStop":
+            return "Ferje";
+        case "lift":
+            return "Heis";
+        case "airport":
+            return "Flyplass";
+        case "multimodal":
+            return "Knutepunkt";
+        default:
+            return "Anna";
     }
-    let stopsTable = "<table><th>Haldeplass</th><th>Transportmiddel</th><th>Avstand</th>";
-    for (let i = 0; i < closest.length; i++) {
-        stopsTable +=
-            "<tr><td>" + getStationName(closest[i][1]) +
-            "</td><td>" + getMode(closest[i][0]) +
-            "</td><td>" + getDistance(closest[i][3]) + "</td></tr>";
+}
+
+
+// Translates minutes until departure to readable text
+function timeUntilDeparture(departureTime, now) {
+    let minutesUntil = (departureTime.getTime() - now.getTime()) / 60000;
+
+    switch (minutesUntil) {
+        case 0:
+            return "er rett rundt hjørnet!";
+        case 1:
+            return "kjem om ett minutt.";
+        case 2:
+            return "kjem om to minutt.";
+        case 3:
+            return "kjem om tre minutt.";
+        case 4:
+            return "kjem om fire minutt.";
+        case 5:
+            return "kjem om fem minutt.";
+        default:
+            return "kjem " + departureTime;
     }
-    resultText.innerHTML = stopsTable;
-    console.log("Displaying finished!");
 }
 
 
