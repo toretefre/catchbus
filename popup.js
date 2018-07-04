@@ -7,6 +7,8 @@ let closestStops = [];
 let cityBikeRacksTrondheim = [];
 // Array containing status of Trondheim City Bike racks
 let cityBikeRackStatusTrondheim = [];
+// Array to be presented
+let closest = [];
 // Defines how many nearby stops to locate:
 const numberOfStops = 5;
 const maxDistanceinMeters = 1000;
@@ -126,7 +128,7 @@ function parseCityBikeRacksTrondheim(jsonToParse) {
 
 // Preparing display
 function mergeStopsAndRacks(closestStops, closestRacks) {
-    let closest = closestStops.concat(closestRacks);
+    closest = closestStops.concat(closestRacks);
     // Sorts ascending based on distance from user
     closest.sort((a, b) => (a[3] - b[3]));
 
@@ -144,25 +146,25 @@ function mergeStopsAndRacks(closestStops, closestRacks) {
 }
 
 // Changes the HTML when all data is ready
-function changeHTML(listToDisplay) {
+function changeHTML() {
     console.log("Final list:");
-    console.log(listToDisplay);
+    console.log(closest);
     let stopsTable = "<table><th></th> <th></th> <th></th> ";
-    for (let i = 0; i < listToDisplay.length; i++) {
+    for (let i = 0; i < closest.length; i++) {
         stopsTable += "<tr>";
         // If city bike rack
-        if (listToDisplay[i][0] === parseInt(listToDisplay[i][0], 10)) {
+        if (closest[i][0] === parseInt(closest[i][0], 10)) {
             stopsTable +=
-                "</tr><tr><td>" + getStationName(listToDisplay[i][1]) + "</td><td>" + getMode(listToDisplay[i][0]) + "</td><td>Ledige syklar</td></tr>" +
-                "<tr><td>" + getDistance(listToDisplay[i][3]) + "</td><td></td><td>" + listToDisplay[i][7] + "</td></tr>";
+                "</tr><tr><td>" + getStationName(closest[i][1]) + "</td><td>" + getMode(closest[i][0]) + "</td><td>Ledige syklar</td></tr>" +
+                "<tr><td>" + getDistance(closest[i][3]) + "</td><td></td><td>" + closest[i][7] + "</td></tr>";
         }
         // If public transport station
         else {
             stopsTable +=
-                "</tr><tr><td>" + getStationName(listToDisplay[i][1]) + "</td><td>" + getMode(listToDisplay[i][0]) + "</td><td>Neste avgang</td></tr>" +
-                "<tr><td>" + getDistance(listToDisplay[i][3]) + "</td><td></td><td>" + "dunno" + "</td></tr>";
-            for (let m = 0; m < listToDisplay[m][6].length; m++) {
-                console.log(listToDisplay[m][6]);
+                "</tr><tr><td>" + getStationName(closest[i][1]) + "</td><td>" + getMode(closest[i][0]) + "</td><td>Neste avgang</td></tr>" +
+                "<tr><td>" + getDistance(closest[i][3]) + "</td><td></td><td>" + "dunno" + "</td></tr>";
+            for (let m = 0; m < closest[m][6].length; m++) {
+                console.log(closest[m][6]);
             }
         }
         stopsTable += "</tr><tr><td>_</td></tr>";
