@@ -14,7 +14,7 @@ const enturendpoint = "https://api.entur.org/journeyplanner/2.0/index/graphql";
 
 
 window.addEventListener('load', function() {
-    console.log("Document loaded, asking for Geolocation!");
+    console.log("Document loaded, starting...");
     getPosition();
     getCityBikeStatusTrondheim();
 });
@@ -138,7 +138,6 @@ function display(closestStops, closestRacks) {
     for (let i = 0; i < closest.length; i++) {
         // If integer, which means city bike rack
         if (closest[i][0] === parseInt(closest[i][0], 10)) {
-            getAvailabilityForCityBikeRack(closest[i][0]);
             continue;
         }
         // Else, which means random public transport station
@@ -162,11 +161,9 @@ function display(closestStops, closestRacks) {
 
 // Gets availability of city bikes
 function getCityBikeStatusTrondheim() {
-    console.log("getCityBikeStatusTrondheim called!");
     let xhr = new XMLHttpRequest();
     xhr.open("GET", "http://gbfs.urbansharing.com/trondheim/station_status.json");
     xhr.send();
-    console.log("Requested system status Trondheim City Bikes!");
     xhr.onreadystatechange = function () {
         if (xhr.readyState === 4 && xhr.status === 200) {
             parseCityBikeStatusTrondheim(xhr.response);
@@ -366,11 +363,6 @@ function getNextDepartureForStop(stopID) {
     return -1;
 }
 
-
-function getAvailabilityForCityBikeRack(rackID) {
-    console.log("Availability asked for rackID: " + rackID);
-    return -1;
-}
 
 function getStationName(station) {
     return station;
