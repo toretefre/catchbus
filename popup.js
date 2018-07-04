@@ -284,6 +284,9 @@ function getNextDepartures(stopID) {
 // Changes the HTML when data is sorted and ready
 function display(closestStops, closestRacks) {
     let closest = closestStops.concat(closestRacks);
+    // Sorts ascending based on distance from user
+    closest.sort((a, b) => (a[3] - b[3]));
+    closest.splice(5);
     console.log("Liste som skal displayast:");
     console.log(closest);
     let stopsTable = "<table><th>Haldeplass</th><th>Transportmiddel</th><th>Avstand</th>";
@@ -294,7 +297,7 @@ function display(closestStops, closestRacks) {
             "</td><td>" + getDistance(closest[i][3]) + "</td></tr>";
     }
     resultText.innerHTML = stopsTable;
-    console.log("finished!");
+    console.log("Displaying finished!");
 }
 
 
