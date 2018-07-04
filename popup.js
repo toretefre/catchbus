@@ -289,6 +289,15 @@ function display(closestStops, closestRacks) {
     closest.splice(5);
     console.log("Liste som skal displayast:");
     console.log(closest);
+    for (let i = 0; i < closest.length; i++) {
+        // If integer, which means city bike rack
+        if (closest[i][0] === parseInt(closest[i][0], 10)) {
+            getAvailabilityForCityBikeRack(closest[i][0]);
+            continue;
+        }
+        // Else, which means random public transport station
+        getNextDepartureForStop(closest[i][2]);
+    }
     let stopsTable = "<table><th>Haldeplass</th><th>Transportmiddel</th><th>Avstand</th>";
     for (let i = 0; i < closest.length; i++) {
         stopsTable +=
@@ -300,6 +309,17 @@ function display(closestStops, closestRacks) {
     console.log("Displaying finished!");
 }
 
+
+function getNextDepartureForStop(stopID) {
+    console.log("Departure asked for stopID: " + stopID);
+    return -1;
+}
+
+
+function getAvailabilityForCityBikeRack(rackID) {
+    console.log("Availability asked for rackID: " + rackID);
+    return -1;
+}
 
 function getStationName(station) {
     return station;
