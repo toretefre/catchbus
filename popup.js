@@ -7,6 +7,7 @@ let closestStops = [];
 let closestRacks = [];
 // Defines how many nearby stops to locate:
 const numberOfStops = 5;
+const maxDistanceinMeters = 1000;
 const enturendpoint = "https://api.entur.org/journeyplanner/2.0/index/graphql";
 
 
@@ -65,7 +66,12 @@ function getNearestStops() {
 function parseStationData(jsonToParse) {
     let parsedJSON = JSON.parse(jsonToParse);
     for (let i = 0; i < parsedJSON["features"].length; i++) {
+
         let category = parsedJSON["features"][i]["properties"]["category"];
+        // Multimodal stops
+        if (parsedJSON["features"][i]["properties"]["category"].length > 1) {
+            category = "multimodal"
+        }
         let stopName = parsedJSON["features"][i]["properties"]["name"];
         let stopID = getStopID(parsedJSON["features"][i]["properties"]["id"]);
         let distance = (parsedJSON["features"][i]["properties"]["distance"])*1000;
@@ -186,6 +192,7 @@ function getDistanceBetweenCoords(lat1, lon1, lat2, lon2) {
 
 // Translates digit representation into form of transportation
 function getMode(mode) {
+    // City bike racks are recognized by ID
     if (Number.isInteger(mode)) {
         return "Bysykkel";
     }
@@ -201,6 +208,8 @@ function getMode(mode) {
             return "Bussterminal";
         case "coachStation":
             return "Bussterminal";
+        case "onstreetTram":
+            return "Trikk";
         case "tramStation":
             return "Trikk";
         case "harbourPort":
@@ -211,6 +220,10 @@ function getMode(mode) {
             return "Ferje";
         case "lift":
             return "Heis";
+        case "airport":
+            return "Flyplass";
+        case "multimodal":
+            return "Knutepunkt";
         default:
             return "Anna";
     }
@@ -285,7 +298,14 @@ function display(closestStops, closestRacks) {
     let closest = closestStops.concat(closestRacks);
     // Sorts ascending based on distance from user
     closest.sort((a, b) => (a[3] - b[3]));
-    closest.splice(5);
+    // Removes things further away than const maxDistanceinMeters
+    for (let i = 0; i < closest.length; i++) {
+        if (closest[i][3] > maxDistanceinMeters) {
+            closest.splice(i);
+            break;
+        }
+        closest.splice(numberOfStops);
+    }
     console.log("Liste som skal displayast:");
     console.log(closest);
     for (let i = 0; i < closest.length; i++) {
