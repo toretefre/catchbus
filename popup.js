@@ -1,6 +1,7 @@
 const now = new Date();
 
 const resultText = document.getElementById("resultText");
+// Arrays should be converted to plain objects
 // Array containing closest public transport stations
 let closestStops = [];
 // Array containing closest Trondheim City Bike racks
@@ -177,14 +178,16 @@ function mergeCityBikeStatusAndInformation(displayArray, statusArray) {
 
 // Changes the HTML when all data is ready
 function changeHTML() {
+    console.log(closestStops[0][6]);
+    for (let stop of closestStops) {
+        for (let departure of closestStops[stop]) {
+            console.log(departure);
+        }
+    }
+
+
     console.log("closest:");
     console.log(closest);
-    console.log("closest[0]:");
-    console.log(closest[0]);
-    console.log("closest[0][6]:");
-    console.log(Object.entries(closest[0][6]));
-    console.log("closest[0][6][0]:");
-    console.log(closest[0][6][0]);
     let stopsTable = "<table><th></th> <th></th> <th></th> ";
     for (let i = 0; i < closest.length; i++) {
         stopsTable += "<tr>";
