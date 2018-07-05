@@ -133,6 +133,16 @@ function mergeStopsAndRacks(closestStops, closestRacks) {
     closest.sort((a, b) => (a[3] - b[3]));
 
     // Removes things further away than const maxDistanceinMeters
+    removeFarAway();
+    // Inserts status into information about city bike racks
+    mergeCityBikeStatusAndInformation(closest, cityBikeRackStatusTrondheim);
+
+    // displays information
+    changeHTML(closest);
+}
+
+
+function removeFarAway() {
     for (let i = 0; i < closest.length; i++) {
         if (closest[i][3] > maxDistanceinMeters) {
             closest.splice(i);
@@ -140,15 +150,41 @@ function mergeStopsAndRacks(closestStops, closestRacks) {
         }
         closest.splice(numberOfStops);
     }
-
-    mergeCityBikeStatusAndInformation(closest, cityBikeRackStatusTrondheim);
-    changeHTML(closest);
 }
+
+
+function mergeCityBikeStatusAndInformation(displayArray, statusArray) {
+    for (let i = 0; i < displayArray.length; i++) {
+        // Checks if city bike rack and not public transport
+        if (displayArray[i][0] === parseInt(displayArray[i][0], 10)) {
+            // Compares rackID in the two Arrays
+            for (let k = 0; k < statusArray.length; k++) {
+                // Found matching rackID
+                if (displayArray[i][0] === statusArray[k][0]) {
+                    // Replacing available bikes
+                    displayArray[i][7] = statusArray[k][1];
+                    // Replacing available docks
+                    displayArray[i][8] = statusArray[k][2];
+                    // Replacing open status, 0 or 1
+                    displayArray[i][9] = statusArray[k][3];
+                    break;
+                }
+            }
+        }
+    }
+}
+
 
 // Changes the HTML when all data is ready
 function changeHTML() {
-    console.log("Final list:");
+    console.log("closest:");
     console.log(closest);
+    console.log("closest[0]:");
+    console.log(closest[0]);
+    console.log("closest[0][6]:");
+    console.log(Object.entries(closest[0][6]));
+    console.log("closest[0][6][0]:");
+    console.log(closest[0][6][0]);
     let stopsTable = "<table><th></th> <th></th> <th></th> ";
     for (let i = 0; i < closest.length; i++) {
         stopsTable += "<tr>";
@@ -173,6 +209,7 @@ function changeHTML() {
 
     console.log("Displaying finished!");
 }
+
 
 // Gets availability of city bikes
 function getCityBikeStatusTrondheim() {
@@ -199,28 +236,6 @@ function parseCityBikeStatusTrondheim(jsonToParse) {
         let open = parsedJSON["data"]["stations"][i]["is_renting"];
 
         cityBikeRackStatusTrondheim.push([rackID, bikes, freeDocks, open]);
-    }
-}
-
-
-function mergeCityBikeStatusAndInformation(displayArray, statusArray) {
-    for (let i = 0; i < displayArray.length; i++) {
-        // Checks if city bike rack and not public transport
-        if (displayArray[i][0] === parseInt(displayArray[i][0], 10)) {
-            // Compares rackID in the two Arrays
-            for (let k = 0; k < statusArray.length; k++) {
-                // Found matching rackID
-                if (displayArray[i][0] === statusArray[k][0]) {
-                    // Replacing available bikes
-                    displayArray[i][7] = statusArray[k][1];
-                    // Replacing available docks
-                    displayArray[i][8] = statusArray[k][2];
-                    // Replacing open status, 0 or 1
-                    displayArray[i][9] = statusArray[k][3];
-                    break;
-                }
-            }
-        }
     }
 }
 
