@@ -13,7 +13,7 @@ let closest = [];
 // Defines how many nearby stops to locate:
 const numberOfStops = 5;
 const maxDistanceinMeters = 1000;
-const enturendpoint = "https://api.entur.org/journeyplanner/2.0/index/graphql";
+const entur_graphql_endpoint = "https://api.entur.org/journeyplanner/2.0/index/graphql";
 
 
 // When page is loaded
@@ -179,14 +179,8 @@ function mergeCityBikeStatusAndInformation(displayArray, statusArray) {
 // Changes the HTML when all data is ready
 function changeHTML() {
     console.log(closestStops[0][6]);
-    for (let stop of closestStops) {
-        for (let departure of closestStops[stop]) {
-            console.log(departure);
-        }
-    }
 
-
-    console.log("closest:");
+    console.log("Final closest:");
     console.log(closest);
     let stopsTable = "<table><th></th> <th></th> <th></th> ";
     for (let i = 0; i < closest.length; i++) {
@@ -267,8 +261,8 @@ function getNextDepartureForStop(stopID) {
 
     const startTime = year + "-" + month + "-" + day + "T" + hours + ":" + minutes + ":" + seconds + "+0200";
 
-    // Sending graphQL request
-    fetch(enturendpoint, {
+    // graphQL request for next departures
+    fetch(entur_graphql_endpoint, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -327,10 +321,13 @@ function updateNextDepartures(data) {
 // Translates keyword into form of transportation
 function getMode(mode) {
     // City bike racks are recognized by ID
-    if (Number.isInteger(mode)) {
+    if (Number.isInteger(parseInt(mode))) {
         return "Bysykkel";
     }
+
+    // Convert to string
     mode += "";
+
     switch (mode) {
         case "onstreetBus":
             return "Buss";
